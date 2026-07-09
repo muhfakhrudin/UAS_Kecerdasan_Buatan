@@ -82,7 +82,7 @@ def search_view(request):
         total_scanned = len(products)
 
         scored_products = calculate_bm25_scores(query, products)
-        results_raw = [(product, score) for product, score in scored_products if score > 0]
+        results_raw = [(product, score) for product, score in scored_products if score > 0][:15]
 
         execution_time = time.time() - start_time
         # ────────────────────────────────────────────────────────────────
