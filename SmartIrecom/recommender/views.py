@@ -82,7 +82,14 @@ def search_view(request):
         total_scanned = len(products)
 
         scored_products = calculate_bm25_scores(query, products)
-        results_raw = [(product, score) for product, score in scored_products if score > 0][:15]
+        
+        # Filter matches with dynamic threshold (10% of highest score) to remove low-quality universal matches (e.g. only matching 'iphone')
+        max_score = scored_products[0][1] if scored_products else 0
+        threshold = max_score * 0.1
+        
+        all_matched = [(product, score) for product, score in scored_products if score > threshold and score > 0]
+        total_found = len(all_matched)  # Jumlah semua produk relevan (untuk metrik)
+        results_raw = all_matched[:15]  # Hanya tampilkan Top-15
 
         execution_time = time.time() - start_time
         # ────────────────────────────────────────────────────────────────
@@ -131,7 +138,8 @@ def search_view(request):
     context = {
         'query': query,
         'results': results,
-        'total_results': len(results),
+        'total_results': total_found if query else 0,  # Semua produk relevan ditemukan
+        'total_displayed': len(results),               # Yang ditampilkan (max 15)
         'total_scanned': total_scanned,
         'execution_time': f"{execution_time:.4f}",
         'max_score': results[0][1] if results else 0,
