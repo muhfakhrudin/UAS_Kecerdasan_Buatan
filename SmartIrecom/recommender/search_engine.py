@@ -135,13 +135,13 @@ def load_products():
             # Pre-compute color class for template
             if battery_val is not None:
                 if battery_val >= 90:
-                    battery_color = 'text-green-400'
+                    battery_color = 'battery-good'
                 elif battery_val >= 80:
-                    battery_color = 'text-yellow-400'
+                    battery_color = 'battery-fair'
                 else:
-                    battery_color = 'text-red-400'
+                    battery_color = 'battery-low'
             else:
-                battery_color = 'text-gray-500'
+                battery_color = 'battery-na'
 
             product = {
                 'toko': row.get('Toko', '').strip(),

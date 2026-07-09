@@ -35,7 +35,7 @@ def _highlight_keywords(text, query_tokens):
     def replacer(match):
         word = match.group(0)
         if word.lower() in query_tokens:
-            return f'<span class="text-cyan-400 font-bold">{word}</span>'
+            return f'<span class="hl-keyword">{word}</span>'
         return word
 
     # Split on word boundaries, preserving separators

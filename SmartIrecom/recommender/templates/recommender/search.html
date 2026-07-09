@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,21 +10,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        'space': {
-                            900: '#0a0a1a',
-                            800: '#0f0f2e',
-                            700: '#161640',
-                            600: '#1e1e52',
-                        },
-                        'neon': {
-                            purple: '#a855f7',
-                            cyan: '#22d3ee',
-                            pink: '#ec4899',
-                        }
-                    },
                     fontFamily: {
                         'display': ['Inter', 'system-ui', 'sans-serif'],
                     },
@@ -33,13 +21,12 @@
                         'float': 'float 6s ease-in-out infinite',
                         'slide-up': 'slide-up 0.5s ease-out',
                         'fade-in': 'fade-in 0.6s ease-out',
-                        'count-up': 'count-up 0.8s ease-out',
                         'shimmer': 'shimmer 2s linear infinite',
                     },
                     keyframes: {
                         'glow-pulse': {
-                            '0%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.3), 0 0 60px rgba(168, 85, 247, 0.1)' },
-                            '100%': { boxShadow: '0 0 30px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.2)' },
+                            '0%': { boxShadow: '0 0 20px var(--glow-color-dim)' },
+                            '100%': { boxShadow: '0 0 30px var(--glow-color-bright)' },
                         },
                         'float': {
                             '0%, 100%': { transform: 'translateY(0px)' },
@@ -63,6 +50,18 @@
         }
     </script>
 
+    <!-- Prevent FOUC: apply theme before render -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('smartirecom-theme');
+            if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,79 +70,169 @@
     <style>
         * { font-family: 'Inter', system-ui, sans-serif; }
 
-        body {
-            background: #0a0a1a;
-            min-height: 100vh;
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* CSS CUSTOM PROPERTIES — DARK MODE (default)                       */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        :root {
+            --bg-primary: #0c0e1a;
+            --bg-secondary: #111427;
+            --bg-tertiary: #171b30;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
+            --bg-card-hover: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            --border-primary: rgba(255,255,255,0.06);
+            --border-hover: rgba(99, 102, 241, 0.45);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #7a8599;
+            --text-muted: #8892a8;
+            --accent-primary: #818cf8;       /* indigo-400 */
+            --accent-secondary: #2dd4bf;     /* teal-400 */
+            --accent-tertiary: #fbbf24;      /* amber-400 */
+            --accent-primary-bg: rgba(99, 102, 241, 0.12);
+            --accent-secondary-bg: rgba(45, 212, 191, 0.12);
+            --accent-tertiary-bg: rgba(251, 191, 36, 0.12);
+            --glow-color-dim: rgba(99, 102, 241, 0.25);
+            --glow-color-bright: rgba(99, 102, 241, 0.5);
+            --mesh-1: rgba(99, 102, 241, 0.07);
+            --mesh-2: rgba(45, 212, 191, 0.05);
+            --mesh-3: rgba(251, 191, 36, 0.04);
+            --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.008) 100%);
+            --glass-border: rgba(255,255,255,0.07);
+            --tooltip-bg: rgba(12, 14, 26, 0.97);
+            --scrollbar-track: #0c0e1a;
+            --scrollbar-thumb: #6366f1;
+            --score-gradient: linear-gradient(90deg, #2dd4bf, #818cf8, #fbbf24);
+            --badge-bg: linear-gradient(135deg, rgba(45, 212, 191, 0.12), rgba(99, 102, 241, 0.12));
+            --badge-border: rgba(45, 212, 191, 0.3);
+            --badge-glow: 0 0 15px rgba(45, 212, 191, 0.18);
+            --btn-gradient: linear-gradient(135deg, #6366f1, #4f46e5, #4338ca);
+            --btn-glow: 0 0 20px rgba(99, 102, 241, 0.35), 0 0 60px rgba(99, 102, 241, 0.1);
+            --btn-glow-hover: 0 0 30px rgba(99, 102, 241, 0.55), 0 0 80px rgba(99, 102, 241, 0.2);
+            --card-hover-shadow: 0 20px 60px rgba(99, 102, 241, 0.12), 0 0 30px rgba(99, 102, 241, 0.06);
+            --shimmer-color: rgba(45, 212, 191, 0.04);
         }
 
-        /* Animated gradient mesh background */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* CSS CUSTOM PROPERTIES — LIGHT MODE                                */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        html:not(.dark) {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+            --bg-card-hover: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+            --border-primary: rgba(0,0,0,0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-tertiary: #475569;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;       /* indigo-500 */
+            --accent-secondary: #14b8a6;     /* teal-500 */
+            --accent-tertiary: #f59e0b;      /* amber-500 */
+            --accent-primary-bg: rgba(99, 102, 241, 0.08);
+            --accent-secondary-bg: rgba(20, 184, 166, 0.08);
+            --accent-tertiary-bg: rgba(245, 158, 11, 0.08);
+            --glow-color-dim: rgba(99, 102, 241, 0.15);
+            --glow-color-bright: rgba(99, 102, 241, 0.3);
+            --mesh-1: rgba(99, 102, 241, 0.06);
+            --mesh-2: rgba(20, 184, 166, 0.04);
+            --mesh-3: rgba(245, 158, 11, 0.03);
+            --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(248,250,252,0.6) 100%);
+            --glass-border: rgba(0,0,0,0.06);
+            --tooltip-bg: rgba(255, 255, 255, 0.97);
+            --scrollbar-track: #f1f5f9;
+            --scrollbar-thumb: #6366f1;
+            --score-gradient: linear-gradient(90deg, #14b8a6, #6366f1, #f59e0b);
+            --badge-bg: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(99, 102, 241, 0.1));
+            --badge-border: rgba(20, 184, 166, 0.35);
+            --badge-glow: 0 0 12px rgba(20, 184, 166, 0.12);
+            --btn-gradient: linear-gradient(135deg, #6366f1, #4f46e5, #4338ca);
+            --btn-glow: 0 4px 14px rgba(99, 102, 241, 0.25);
+            --btn-glow-hover: 0 6px 20px rgba(99, 102, 241, 0.4);
+            --card-hover-shadow: 0 20px 50px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(0,0,0,0.06);
+            --shimmer-color: rgba(20, 184, 166, 0.04);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* GLOBAL STYLES                                                     */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
         .bg-mesh {
             background:
-                radial-gradient(ellipse at 20% 50%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%),
-                #0a0a1a;
+                radial-gradient(ellipse at 20% 50%, var(--mesh-1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, var(--mesh-2) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, var(--mesh-3) 0%, transparent 50%),
+                var(--bg-primary);
+            transition: background 0.4s ease;
         }
 
-        /* Glowing search input */
+        /* Search input focus */
         .search-input:focus {
-            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.5), 0 0 40px rgba(168, 85, 247, 0.15);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45), 0 0 40px var(--glow-color-dim);
         }
 
         /* Glowing button */
         .btn-glow {
-            background: linear-gradient(135deg, #a855f7, #7c3aed, #6d28d9);
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 60px rgba(168, 85, 247, 0.1);
+            background: var(--btn-gradient);
+            box-shadow: var(--btn-glow);
             transition: all 0.3s ease;
         }
         .btn-glow:hover {
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.25);
+            box-shadow: var(--btn-glow-hover);
             transform: translateY(-2px);
         }
         .btn-glow:active {
             transform: translateY(0px);
         }
 
-        /* Product card glass effect */
+        /* Product card glass */
         .card-glass {
-            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
             backdrop-filter: blur(10px);
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-glass:hover {
             transform: translateY(-6px) scale(1.02);
-            border-color: rgba(168, 85, 247, 0.4);
-            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.15), 0 0 30px rgba(168, 85, 247, 0.08);
-            background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+            border-color: var(--border-hover);
+            box-shadow: var(--card-hover-shadow);
+            background: var(--bg-card-hover);
         }
 
         /* Analytics panel glass */
         .analytics-glass {
-            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
+            transition: background 0.4s ease, border 0.4s ease;
         }
 
-        /* Neon badge glow */
+        /* Score badge */
         .badge-neon {
-            background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(168, 85, 247, 0.15));
-            border: 1px solid rgba(34, 211, 238, 0.3);
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+            background: var(--badge-bg);
+            border: 1px solid var(--badge-border);
+            box-shadow: var(--badge-glow);
             transition: all 0.3s ease;
         }
         .badge-neon:hover {
-            box-shadow: 0 0 25px rgba(34, 211, 238, 0.4), 0 0 50px rgba(34, 211, 238, 0.15);
-            border-color: rgba(34, 211, 238, 0.5);
+            box-shadow: 0 0 25px rgba(45, 212, 191, 0.3);
+            border-color: rgba(45, 212, 191, 0.5);
         }
 
-        /* Score bar animation */
+        /* Score bar */
         .score-bar {
-            background: linear-gradient(90deg, #22d3ee, #a855f7, #ec4899);
+            background: var(--score-gradient);
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Tooltip styles */
+        /* Tooltip */
         .tooltip-trigger { position: relative; }
         .tooltip-content {
             visibility: hidden;
@@ -154,10 +243,10 @@
             transform: translateX(-50%) translateY(5px);
             width: 280px;
             padding: 12px 14px;
-            background: linear-gradient(135deg, rgba(15, 15, 46, 0.98), rgba(10, 10, 26, 0.98));
-            border: 1px solid rgba(34, 211, 238, 0.25);
+            background: var(--tooltip-bg);
+            border: 1px solid var(--badge-border);
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(34, 211, 238, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             z-index: 50;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
@@ -169,7 +258,7 @@
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: rgba(34, 211, 238, 0.25);
+            border-top-color: var(--badge-border);
         }
         .tooltip-trigger:hover .tooltip-content {
             visibility: visible;
@@ -178,27 +267,27 @@
             pointer-events: auto;
         }
 
-        /* Compare checkbox custom style */
+        /* Compare checkbox */
         .compare-checkbox {
             appearance: none;
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            border: 1.5px solid rgba(255,255,255,0.15);
+            border: 1.5px solid var(--border-primary);
             border-radius: 5px;
-            background: rgba(255,255,255,0.03);
+            background: transparent;
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
         }
         .compare-checkbox:hover {
-            border-color: rgba(168, 85, 247, 0.5);
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--glow-color-dim);
         }
         .compare-checkbox:checked {
-            background: linear-gradient(135deg, #a855f7, #7c3aed);
-            border-color: #a855f7;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+            background: var(--btn-gradient);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px var(--glow-color-dim);
         }
         .compare-checkbox:checked::after {
             content: '✓';
@@ -211,15 +300,15 @@
             font-weight: 700;
         }
 
-        /* Scrollbar styling */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a1a; }
-        ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 
-        /* Stagger animation for cards */
+        /* Animations */
         .card-stagger { animation: slide-up 0.5s ease-out both; }
 
-        /* Compare floating bar */
+        /* Compare bar */
         .compare-bar {
             transform: translateY(100px);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -228,40 +317,305 @@
             transform: translateY(0);
         }
 
-        /* Metric counter shimmer */
+        /* Metric shimmer */
         .metric-shimmer {
-            background: linear-gradient(90deg, transparent 0%, rgba(34, 211, 238, 0.05) 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, var(--shimmer-color) 50%, transparent 100%);
             background-size: 200% 100%;
             animation: shimmer 3s linear infinite;
         }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* THEME TOGGLE BUTTON                                               */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        .theme-toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            border-radius: 14px;
+            border: 1.5px solid var(--border-primary);
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+        }
+        .theme-toggle:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px var(--glow-color-dim);
+        }
+        .theme-toggle-knob {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .dark .theme-toggle-knob {
+            transform: translateX(24px);
+        }
+        html:not(.dark) .theme-toggle-knob {
+            transform: translateX(0px);
+            background: #f59e0b;
+        }
+        .theme-toggle-knob svg {
+            width: 12px;
+            height: 12px;
+            color: white;
+        }
+
+        /* Theme-aware utility helpers */
+        .text-themed-primary { color: var(--text-primary); }
+        .text-themed-secondary { color: var(--text-secondary); }
+        .text-themed-tertiary { color: var(--text-tertiary); }
+        .text-themed-muted { color: var(--text-muted); }
+        .text-accent-primary { color: var(--accent-primary); }
+        .text-accent-secondary { color: var(--accent-secondary); }
+        .text-accent-tertiary { color: var(--accent-tertiary); }
+        .bg-accent-primary-subtle { background: var(--accent-primary-bg); }
+        .bg-accent-secondary-subtle { background: var(--accent-secondary-bg); }
+        .bg-accent-tertiary-subtle { background: var(--accent-tertiary-bg); }
+        .border-themed { border-color: var(--border-primary); }
+        .bg-themed-secondary { background: var(--bg-secondary); }
+        .bg-themed-tertiary { background: var(--bg-tertiary); }
+
+        /* Search bar background */
+        .search-bar-bg {
+            background: var(--bg-secondary);
+            transition: background 0.4s ease;
+        }
+
+        /* Detail cell background — separate dark/light for proper contrast */
+        .detail-cell {
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: background 0.4s ease, border 0.4s ease;
+        }
+        .dark .detail-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .dark .detail-cell .detail-label {
+            color: #94a3b8;
+        }
+        .dark .detail-cell .detail-value {
+            color: #e2e8f0;
+        }
+        html:not(.dark) .detail-cell {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+        }
+        html:not(.dark) .detail-cell .detail-label {
+            color: #475569;
+        }
+        html:not(.dark) .detail-cell .detail-value {
+            color: #0f172a;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* THEMED COMPONENT CLASSES — Monochrome Elegant                     */
+        /* ═══════════════════════════════════════════════════════════════════ */
+
+        /* Keyword highlight */
+        .hl-keyword {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        /* Universal badge base — monochrome slate with indigo hint */
+        .badge-mono {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.25s ease;
+        }
+
+        /* Dark mode badges */
+        .dark .badge-mono {
+            background: rgba(148, 163, 184, 0.08);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .dark .badge-mono:hover {
+            background: rgba(148, 163, 184, 0.12);
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+
+        /* Light mode badges */
+        html:not(.dark) .badge-mono {
+            background: rgba(51, 65, 85, 0.06);
+            color: #475569;
+            border: 1px solid rgba(51, 65, 85, 0.1);
+        }
+        html:not(.dark) .badge-mono:hover {
+            background: rgba(51, 65, 85, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Score badge — slightly elevated with indigo accent */
+        .badge-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+        .dark .badge-score {
+            background: rgba(99, 102, 241, 0.08);
+            color: #c7d2fe;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+        }
+        .dark .badge-score:hover {
+            background: rgba(99, 102, 241, 0.14);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        html:not(.dark) .badge-score {
+            background: rgba(99, 102, 241, 0.06);
+            color: #4338ca;
+            border: 1px solid rgba(99, 102, 241, 0.12);
+        }
+        html:not(.dark) .badge-score:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+
+        /* Matched field badge */
+        .badge-matched {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: all 0.25s ease;
+        }
+        .dark .badge-matched {
+            background: rgba(148, 163, 184, 0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+        }
+        html:not(.dark) .badge-matched {
+            background: rgba(51, 65, 85, 0.04);
+            color: #64748b;
+            border: 1px solid rgba(51, 65, 85, 0.08);
+        }
+
+        /* Query token badge */
+        .badge-token {
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: all 0.25s ease;
+        }
+        .dark .badge-token {
+            background: rgba(99, 102, 241, 0.06);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        html:not(.dark) .badge-token {
+            background: rgba(99, 102, 241, 0.05);
+            color: #4f46e5;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        /* Battery health — monochrome with subtle semantic */
+        .battery-good { color: var(--text-primary); font-weight: 600; }
+        .battery-fair { color: var(--text-secondary); font-weight: 600; }
+        .battery-low  { color: var(--text-tertiary); font-weight: 600; }
+        .battery-na   { color: var(--text-muted); }
+
+        /* Battery uses small colored dot instead of colored text */
+        .battery-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .battery-good .battery-dot { background: #10b981; }
+        .battery-fair .battery-dot { background: #f59e0b; }
+        .battery-low .battery-dot  { background: #ef4444; }
+        .battery-na .battery-dot   { background: var(--text-muted); }
+
+        /* BM25 Active status badge */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+        .dark .badge-status {
+            background: rgba(148, 163, 184, 0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        html:not(.dark) .badge-status {
+            background: rgba(51, 65, 85, 0.04);
+            color: #64748b;
+            border: 1px solid rgba(51, 65, 85, 0.08);
+        }
+
+        /* Search input placeholder */
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
     </style>
 </head>
-<body class="bg-mesh text-white antialiased">
+<body class="bg-mesh antialiased">
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- NAVIGATION BAR with Theme Toggle                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <nav class="relative z-30 flex items-center justify-between max-w-7xl mx-auto px-6 pt-5">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--btn-gradient);">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            </div>
+            <span class="text-sm font-bold text-themed-primary tracking-tight">Smart IRecom</span>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+            <div class="theme-toggle-knob">
+                <!-- Sun icon (light mode) -->
+                <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20" style="display:none;"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+                <!-- Moon icon (dark mode) -->
+                <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            </div>
+        </button>
+    </nav>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- HERO SECTION                                                          -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <header class="relative overflow-hidden">
         <!-- Decorative floating orbs -->
-        <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute top-40 right-20 w-96 h-96 bg-cyan-500/8 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
-        <div class="absolute -bottom-20 left-1/2 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-float" style="animation-delay: -1.5s;"></div>
+        <div class="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl animate-float" style="background: var(--mesh-1);"></div>
+        <div class="absolute top-40 right-20 w-96 h-96 rounded-full blur-3xl animate-float" style="animation-delay: -3s; background: var(--mesh-2);"></div>
+        <div class="absolute -bottom-20 left-1/2 w-80 h-80 rounded-full blur-3xl animate-float" style="animation-delay: -1.5s; background: var(--mesh-3);"></div>
 
-        <div class="relative max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
+        <div class="relative max-w-5xl mx-auto px-6 pt-12 pb-12 text-center">
             <!-- Brand -->
             <div class="animate-fade-in">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/5 text-purple-300 text-xs font-medium tracking-wider uppercase mb-8">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-8" style="border: 1px solid var(--border-hover); background: var(--accent-primary-bg); color: var(--accent-primary);">
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     Powered by Okapi BM25 Algorithm
                 </div>
 
                 <h1 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6">
-                    <span class="bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">
+                    <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                         Smart IRecom
                     </span>
                 </h1>
-                <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-                    Temukan iPhone second terbaik dengan <span class="text-purple-400 font-semibold">AI Search Engine</span>.
+                <p class="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed text-themed-secondary">
+                    Temukan iPhone second terbaik dengan <span class="font-semibold text-accent-primary">AI Search Engine</span>.
                     Cari berdasarkan varian, storage, battery health, harga, dan lainnya.
                 </p>
             </div>
@@ -269,10 +623,10 @@
             <!-- Search Bar -->
             <form method="GET" action="{% url 'recommender:search' %}" class="animate-slide-up max-w-3xl mx-auto">
                 <div class="relative group">
-                    <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 via-cyan-500 to-pink-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
-                    <div class="relative flex items-center bg-space-800 rounded-2xl border border-white/5 overflow-hidden">
+                    <div class="absolute -inset-1 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));"></div>
+                    <div class="relative flex items-center search-bar-bg rounded-2xl overflow-hidden" style="border: 1px solid var(--border-primary);">
                         <!-- Search icon -->
-                        <div class="pl-5 pr-2 text-gray-500">
+                        <div class="pl-5 pr-2 text-themed-muted">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
@@ -283,7 +637,8 @@
                             id="search-input"
                             value="{{ query }}"
                             placeholder="Describe the iPhone you want (e.g., iPhone 11 Pro Max, 256GB, battery health > 90%)..."
-                            class="search-input flex-1 bg-transparent text-white placeholder-gray-500 px-3 py-5 text-base focus:outline-none"
+                            class="search-input flex-1 bg-transparent px-3 py-5 text-base focus:outline-none text-themed-primary"
+                            style="color: var(--text-primary);"
                             autocomplete="off"
                         >
                         <button type="submit" class="btn-glow text-white font-semibold px-6 py-3 mr-2 rounded-xl text-sm tracking-wide flex items-center gap-2 cursor-pointer">
@@ -297,11 +652,11 @@
 
                 <!-- Quick search tags -->
                 <div class="flex flex-wrap justify-center gap-2 mt-5">
-                    <button type="button" onclick="setQuery('iPhone 11 Pro Max 256GB')" class="px-3 py-1 text-xs rounded-full border border-white/10 text-gray-400 hover:text-purple-300 hover:border-purple-500/30 transition-all cursor-pointer">iPhone 11 Pro Max 256GB</button>
-                    <button type="button" onclick="setQuery('iPhone 12 128GB Shopee')" class="px-3 py-1 text-xs rounded-full border border-white/10 text-gray-400 hover:text-purple-300 hover:border-purple-500/30 transition-all cursor-pointer">iPhone 12 128GB Shopee</button>
-                    <button type="button" onclick="setQuery('iPhone 13 Pro battery 90')" class="px-3 py-1 text-xs rounded-full border border-white/10 text-gray-400 hover:text-purple-300 hover:border-purple-500/30 transition-all cursor-pointer">iPhone 13 Pro battery 90</button>
-                    <button type="button" onclick="setQuery('iPhone 11 64GB Jakarta')" class="px-3 py-1 text-xs rounded-full border border-white/10 text-gray-400 hover:text-purple-300 hover:border-purple-500/30 transition-all cursor-pointer">iPhone 11 64GB Jakarta</button>
-                    <button type="button" onclick="setQuery('iPhone 13 256GB Tokopedia')" class="px-3 py-1 text-xs rounded-full border border-white/10 text-gray-400 hover:text-purple-300 hover:border-purple-500/30 transition-all cursor-pointer">iPhone 13 256GB Tokopedia</button>
+                    <button type="button" onclick="setQuery('iPhone 11 Pro Max 256GB')" class="px-3 py-1 text-xs rounded-full transition-all cursor-pointer text-themed-tertiary" style="border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.color='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.color='';">iPhone 11 Pro Max 256GB</button>
+                    <button type="button" onclick="setQuery('iPhone 12 128GB Shopee')" class="px-3 py-1 text-xs rounded-full transition-all cursor-pointer text-themed-tertiary" style="border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.color='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.color='';">iPhone 12 128GB Shopee</button>
+                    <button type="button" onclick="setQuery('iPhone 13 Pro battery 90')" class="px-3 py-1 text-xs rounded-full transition-all cursor-pointer text-themed-tertiary" style="border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.color='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.color='';">iPhone 13 Pro battery 90</button>
+                    <button type="button" onclick="setQuery('iPhone 11 64GB Jakarta')" class="px-3 py-1 text-xs rounded-full transition-all cursor-pointer text-themed-tertiary" style="border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.color='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.color='';">iPhone 11 64GB Jakarta</button>
+                    <button type="button" onclick="setQuery('iPhone 13 256GB Tokopedia')" class="px-3 py-1 text-xs rounded-full transition-all cursor-pointer text-themed-tertiary" style="border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.color='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.color='';">iPhone 13 256GB Tokopedia</button>
                 </div>
             </form>
         </div>
@@ -320,66 +675,66 @@
             <div class="flex items-center gap-2 mb-4">
                 <div class="flex items-center gap-2">
                     <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                     </span>
-                    <span class="text-sm font-semibold text-white">BM25 Engine — Performance Analytics</span>
+                    <span class="text-sm font-semibold text-themed-primary">BM25 Engine — Performance Analytics</span>
                 </div>
-                <span class="text-[10px] text-gray-500 ml-auto uppercase tracking-widest">Real-time Metrics</span>
+                <span class="text-[10px] ml-auto uppercase tracking-widest text-themed-muted">Real-time Metrics</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- Metric 1: Database Scanned -->
-                <div class="metric-shimmer rounded-xl p-4 border border-white/5 relative overflow-hidden">
+                <div class="metric-shimmer rounded-xl p-4 relative overflow-hidden" style="border: 1px solid var(--border-primary);">
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
+                                <svg class="w-4 h-4" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                                 </svg>
                             </div>
-                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Database Scanned</p>
+                            <p class="text-[10px] uppercase tracking-wider text-themed-muted">Database Scanned</p>
                         </div>
-                        <p class="text-2xl font-black text-white">{{ total_scanned }} <span class="text-sm font-normal text-gray-500">products</span></p>
+                        <p class="text-2xl font-black text-themed-primary">{{ total_scanned }} <span class="text-sm font-normal text-themed-muted">products</span></p>
                     </div>
                 </div>
 
                 <!-- Metric 2: Execution Latency -->
-                <div class="metric-shimmer rounded-xl p-4 border border-white/5 relative overflow-hidden">
+                <div class="metric-shimmer rounded-xl p-4 relative overflow-hidden" style="border: 1px solid var(--border-primary);">
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent-secondary-bg); border: 1px solid rgba(45, 212, 191, 0.25);">
+                                <svg class="w-4 h-4" style="color: var(--accent-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </div>
-                            <p class="text-[10px] uppercase tracking-wider text-gray-500">BM25 Execution Latency</p>
+                            <p class="text-[10px] uppercase tracking-wider text-themed-muted">BM25 Execution Latency</p>
                         </div>
-                        <p class="text-2xl font-black text-white">{{ execution_time }} <span class="text-sm font-normal text-gray-500">seconds</span></p>
+                        <p class="text-2xl font-black text-themed-primary">{{ execution_time }} <span class="text-sm font-normal text-themed-muted">seconds</span></p>
                     </div>
                 </div>
 
                 <!-- Metric 3: Relevant Matches -->
-                <div class="metric-shimmer rounded-xl p-4 border border-white/5 relative overflow-hidden">
+                <div class="metric-shimmer rounded-xl p-4 relative overflow-hidden" style="border: 1px solid var(--border-primary);">
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-green-500/15 border border-green-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent-tertiary-bg); border: 1px solid rgba(251, 191, 36, 0.25);">
+                                <svg class="w-4 h-4" style="color: var(--accent-tertiary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </div>
-                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Relevant Matches Found</p>
+                            <p class="text-[10px] uppercase tracking-wider text-themed-muted">Relevant Matches Found</p>
                         </div>
-                        <p class="text-2xl font-black text-white">{{ total_results }} <span class="text-sm font-normal text-gray-500">items</span></p>
+                        <p class="text-2xl font-black text-themed-primary">{{ total_results }} <span class="text-sm font-normal text-themed-muted">items</span></p>
                     </div>
                 </div>
             </div>
 
             <!-- Query Analysis Strip -->
-            <div class="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
-                <span class="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Query Tokens:</span>
+            <div class="mt-4 flex flex-wrap items-center gap-2 pt-3" style="border-top: 1px solid var(--border-primary);">
+                <span class="text-[10px] uppercase tracking-wider text-themed-muted mr-1">Query Tokens:</span>
                 {% for token in query_tokens %}
-                <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/15">{{ token }}</span>
+                <span class="badge-token px-2 py-0.5 text-[11px]">{{ token }}</span>
                 {% endfor %}
             </div>
         </div>
@@ -387,23 +742,23 @@
         <!-- Results Header -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 animate-fade-in">
             <div>
-                <h2 class="text-2xl font-bold text-white mb-1">
+                <h2 class="text-2xl font-bold text-themed-primary mb-1">
                     Search Results
                 </h2>
-                <p class="text-gray-400 text-sm">
+                <p class="text-sm text-themed-secondary">
                     {% if results %}
-                        Found <span class="text-cyan-400 font-semibold">{{ total_results }}</span> matching products from <span class="text-gray-300">{{ total_scanned }}</span> listings for
-                        "<span class="text-purple-400">{{ query }}</span>"
+                        Found <span class="font-semibold text-accent-secondary">{{ total_results }}</span> matching products from <span class="text-themed-primary">{{ total_scanned }}</span> listings for
+                        "<span class="text-accent-primary">{{ query }}</span>"
                     {% else %}
-                        No results found for "<span class="text-purple-400">{{ query }}</span>"
+                        No results found for "<span class="text-accent-primary">{{ query }}</span>"
                     {% endif %}
                 </p>
             </div>
             {% if results %}
-            <div class="mt-3 sm:mt-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium">
+            <div class="badge-status mt-3 sm:mt-0 px-3 py-1.5 rounded-lg text-xs font-medium">
                 <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background: var(--accent-primary);"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" style="background: var(--accent-primary);"></span>
                 </span>
                 BM25 Algorithm Active
             </div>
@@ -418,37 +773,34 @@
             {% for product, score in results %}
             <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col" style="animation-delay: {{ forloop.counter0 }}00ms;" data-product-id="{{ forloop.counter }}">
 
-                <!-- Card Header: Score Badge (with tooltip) + Platform -->
+                <!-- Card Header: Score Badge + Platform -->
                 <div class="flex items-center justify-between mb-4">
                     <!-- AI Match Score Badge with Tooltip -->
                     <div class="tooltip-trigger">
-                        <div class="badge-neon px-3 py-1.5 rounded-lg cursor-help">
-                            <div class="flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                                <span class="text-xs font-bold text-cyan-300">AI Match: {{ score }}</span>
-                                <!-- Info icon -->
-                                <svg class="w-3 h-3 text-cyan-500/50" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
+                        <div class="badge-score px-3 py-1.5 cursor-help">
+                            <svg class="w-3.5 h-3.5" style="color: var(--accent-primary);" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <span class="text-xs">AI Match: {{ score }}</span>
+                            <svg class="w-3 h-3" style="color: var(--text-muted);" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
                         </div>
 
                         <!-- Tooltip: Score Transparency -->
                         <div class="tooltip-content">
                             <div class="flex items-center gap-2 mb-2">
-                                <div class="w-6 h-6 rounded-md bg-cyan-500/15 flex items-center justify-center">
-                                    <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--accent-secondary-bg);">
+                                    <svg class="w-3.5 h-3.5" style="color: var(--accent-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                                     </svg>
                                 </div>
-                                <span class="text-xs font-bold text-white">Score Transparency</span>
+                                <span class="text-xs font-bold text-themed-primary">Score Transparency</span>
                             </div>
-                            <p class="text-[11px] text-gray-300 leading-relaxed mb-2">
-                                This score is computed using <span class="text-cyan-400 font-semibold">TF-IDF</span> word frequency weight against document length saturation.
+                            <p class="text-[11px] leading-relaxed mb-2 text-themed-secondary">
+                                This score is computed using <span class="font-semibold text-accent-secondary">TF-IDF</span> word frequency weight against document length saturation.
                             </p>
-                            <div class="flex items-center gap-3 text-[10px] text-gray-500 pt-2 border-t border-white/5">
+                            <div class="flex items-center gap-3 text-[10px] pt-2 text-themed-muted" style="border-top: 1px solid var(--border-primary);">
                                 <span>k₁ = 1.5</span>
                                 <span>b = 0.75</span>
                                 <span>Algorithm: Okapi BM25</span>
@@ -457,30 +809,22 @@
                     </div>
 
                     <!-- Platform Badge -->
-                    <span class="text-xs font-medium px-2.5 py-1 rounded-md
-                        {% if product.platform == 'Shopee' %}
-                            bg-orange-500/10 text-orange-400 border border-orange-500/20
-                        {% elif product.platform == 'Tokopedia' %}
-                            bg-green-500/10 text-green-400 border border-green-500/20
-                        {% else %}
-                            bg-gray-500/10 text-gray-400 border border-gray-500/20
-                        {% endif %}
-                    ">
+                    <span class="badge-mono text-xs px-2.5 py-1">
                         {{ product.platform }}
                     </span>
                 </div>
 
-                <!-- Product Title (Varian) — with keyword highlighting -->
-                <h3 class="text-lg font-bold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                <!-- Product Title -->
+                <h3 class="text-lg font-bold text-themed-primary mb-1 group-hover:text-accent-primary" style="transition: color 0.3s ease;">
                     {{ product.kategori_varian_hl }}
                 </h3>
-                <p class="text-xs text-gray-500 mb-2">{{ product.kategori_seri_hl }}</p>
+                <p class="text-xs text-themed-muted mb-2">{{ product.kategori_seri_hl }}</p>
 
                 <!-- Matched Specs Snippet -->
                 {% if product.matched_fields %}
                 <div class="flex flex-wrap gap-1.5 mb-3">
                     {% for field in product.matched_fields %}
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-md bg-cyan-500/8 text-cyan-400/80 border border-cyan-500/10">
+                    <span class="badge-matched px-2 py-0.5 text-[10px]">
                         <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                         {{ field }} matched
                     </span>
@@ -488,70 +832,62 @@
                 </div>
                 {% endif %}
 
-                <!-- Product Details Grid — grows to fill space -->
+                <!-- Product Details Grid -->
                 <div class="grid grid-cols-2 gap-3 mb-4 flex-1">
                     <!-- Storage -->
-                    <div class="bg-white/3 rounded-lg p-3 border border-white/5">
-                        <p class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Storage</p>
-                        <p class="text-sm font-semibold text-white">{{ product.penyimpanan_hl }}</p>
+                    <div class="detail-cell">
+                        <p class="detail-label text-[10px] uppercase tracking-wider mb-1">Storage</p>
+                        <p class="detail-value text-sm font-semibold">{{ product.penyimpanan_hl }}</p>
                     </div>
 
                     <!-- Battery Health -->
-                    <div class="bg-white/3 rounded-lg p-3 border border-white/5">
-                        <p class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Battery</p>
-                        <p class="text-sm font-semibold {{ product.battery_color }}">
-                            {% if product.battery_health %}{{ product.battery_health }}%{% else %}N/A{% endif %}
+                    <div class="detail-cell">
+                        <p class="detail-label text-[10px] uppercase tracking-wider mb-1">Battery</p>
+                        <p class="detail-value text-sm font-semibold {{ product.battery_color }}">
+                            {% if product.battery_health %}<span class="battery-dot"></span>{{ product.battery_health }}%{% else %}N/A{% endif %}
                         </p>
                     </div>
 
                     <!-- Store -->
-                    <div class="bg-white/3 rounded-lg p-3 border border-white/5">
-                        <p class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Toko</p>
-                        <p class="text-sm font-medium text-gray-300 truncate" title="{{ product.toko }}">{{ product.toko_hl }}</p>
+                    <div class="detail-cell">
+                        <p class="detail-label text-[10px] uppercase tracking-wider mb-1">Toko</p>
+                        <p class="detail-value text-sm font-medium truncate" title="{{ product.toko }}">{{ product.toko_hl }}</p>
                     </div>
 
                     <!-- Region -->
-                    <div class="bg-white/3 rounded-lg p-3 border border-white/5">
-                        <p class="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Wilayah</p>
-                        <p class="text-sm font-medium text-gray-300 truncate" title="{{ product.wilayah_toko }}">{{ product.wilayah_toko_hl }}</p>
+                    <div class="detail-cell">
+                        <p class="detail-label text-[10px] uppercase tracking-wider mb-1">Wilayah</p>
+                        <p class="detail-value text-sm font-medium truncate" title="{{ product.wilayah_toko }}">{{ product.wilayah_toko_hl }}</p>
                     </div>
                 </div>
 
                 <!-- Price -->
-                <div class="flex items-end justify-between pt-3 border-t border-white/5">
+                <div class="flex items-end justify-between pt-3" style="border-top: 1px solid var(--border-primary);">
                     <div>
-                        <p class="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Harga</p>
-                        <p class="text-xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                        <p class="text-[10px] uppercase tracking-wider text-themed-muted mb-0.5">Harga</p>
+                        <p class="text-xl font-black" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                             {{ product.harga }}
                         </p>
                     </div>
                     <div class="text-right">
-                        <span class="inline-flex items-center text-[10px] text-gray-500 gap-1">
+                        <span class="inline-flex items-center text-[10px] text-themed-muted gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                             {{ product.pembayaran }}
                         </span>
-                        <p class="text-[10px] mt-0.5 px-1.5 py-0.5 rounded text-gray-500
-                            {% if product.kategori_iphone == 'Resmi' %}
-                                bg-blue-500/10 text-blue-400
-                            {% else %}
-                                bg-amber-500/10 text-amber-400
-                            {% endif %}
-                        ">{{ product.kategori_iphone }}</p>
+                        <p class="badge-mono text-[10px] mt-0.5 px-1.5 py-0.5">{{ product.kategori_iphone }}</p>
                     </div>
                 </div>
 
                 <!-- Score Bar + Compare Checkbox -->
                 <div class="mt-3 flex items-center gap-3">
-                    <!-- Score Bar (visual representation) -->
                     <div class="flex-1">
-                        <div class="w-full bg-white/5 rounded-full h-1 overflow-hidden">
+                        <div class="w-full rounded-full h-1 overflow-hidden" style="background: var(--border-primary);">
                             <div class="score-bar h-1 rounded-full" style="width: {% widthratio score max_score 100 %}%;"></div>
                         </div>
                     </div>
-                    <!-- Compare Checkbox -->
                     <label class="flex items-center gap-1.5 cursor-pointer group/compare shrink-0" title="Add to comparison">
                         <input type="checkbox" class="compare-checkbox" data-product="{{ forloop.counter }}" onchange="updateCompareBar()">
-                        <span class="text-[10px] text-gray-500 group-hover/compare:text-purple-400 transition-colors select-none">Compare</span>
+                        <span class="text-[10px] text-themed-muted transition-colors select-none">Compare</span>
                     </label>
                 </div>
             </div>
@@ -561,13 +897,13 @@
         {% else %}
         <!-- Empty State -->
         <div class="text-center py-20 animate-fade-in">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                <svg class="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
+                <svg class="w-10 h-10" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">No matching products found</h3>
-            <p class="text-gray-400 max-w-md mx-auto">
+            <h3 class="text-xl font-bold text-themed-primary mb-2">No matching products found</h3>
+            <p class="text-themed-secondary max-w-md mx-auto">
                 Try adjusting your search terms. You can search by variant (e.g., "iPhone 13 Pro"), storage ("256GB"), platform ("Shopee"), or location ("Jakarta").
             </p>
         </div>
@@ -580,35 +916,35 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 <!-- Feature 1 -->
                 <div class="card-glass rounded-2xl p-8 text-center">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-purple-500/10 border border-purple-500/20 mb-4">
-                        <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
+                        <svg class="w-7 h-7" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
                     </div>
-                    <h3 class="text-white font-bold mb-2">BM25 AI Ranking</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Okapi BM25 probabilistic algorithm ranks products by relevance using TF-IDF weighting.</p>
+                    <h3 class="font-bold mb-2 text-themed-primary">BM25 AI Ranking</h3>
+                    <p class="text-sm leading-relaxed text-themed-secondary">Okapi BM25 probabilistic algorithm ranks products by relevance using TF-IDF weighting.</p>
                 </div>
 
                 <!-- Feature 2 -->
                 <div class="card-glass rounded-2xl p-8 text-center">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
-                        <svg class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style="background: var(--accent-secondary-bg); border: 1px solid rgba(45, 212, 191, 0.25);">
+                        <svg class="w-7 h-7" style="color: var(--accent-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                     </div>
-                    <h3 class="text-white font-bold mb-2">527 Products</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Curated database of second-hand iPhones from Shopee & Tokopedia marketplaces.</p>
+                    <h3 class="font-bold mb-2 text-themed-primary">527 Products</h3>
+                    <p class="text-sm leading-relaxed text-themed-secondary">Curated database of second-hand iPhones from Shopee & Tokopedia marketplaces.</p>
                 </div>
 
                 <!-- Feature 3 -->
                 <div class="card-glass rounded-2xl p-8 text-center">
-                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-pink-500/10 border border-pink-500/20 mb-4">
-                        <svg class="w-7 h-7 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style="background: var(--accent-tertiary-bg); border: 1px solid rgba(251, 191, 36, 0.25);">
+                        <svg class="w-7 h-7" style="color: var(--accent-tertiary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
                     </div>
-                    <h3 class="text-white font-bold mb-2">Transparent Scoring</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">Every result shows its exact BM25 relevance score for full AI transparency.</p>
+                    <h3 class="font-bold mb-2 text-themed-primary">Transparent Scoring</h3>
+                    <p class="text-sm leading-relaxed text-themed-secondary">Every result shows its exact BM25 relevance score for full AI transparency.</p>
                 </div>
             </div>
         </div>
@@ -619,20 +955,20 @@
     <!-- COMPARE FLOATING BAR                                                  -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <div id="compare-bar" class="compare-bar fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
-        <div class="max-w-3xl mx-auto analytics-glass rounded-2xl p-4 flex items-center justify-between pointer-events-auto border border-purple-500/20 shadow-2xl">
+        <div class="max-w-3xl mx-auto analytics-glass rounded-2xl p-4 flex items-center justify-between pointer-events-auto shadow-2xl" style="border: 1px solid var(--border-hover);">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
+                    <svg class="w-5 h-5" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-white"><span id="compare-count">0</span> products selected</p>
-                    <p class="text-[10px] text-gray-500">Select products to compare side-by-side</p>
+                    <p class="text-sm font-semibold text-themed-primary"><span id="compare-count">0</span> products selected</p>
+                    <p class="text-[10px] text-themed-muted">Select products to compare side-by-side</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="clearCompare()" class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white border border-white/10 rounded-lg transition-colors cursor-pointer">
+                <button onclick="clearCompare()" class="px-3 py-1.5 text-xs font-medium text-themed-tertiary rounded-lg transition-colors cursor-pointer" style="border: 1px solid var(--border-primary);">
                     Clear
                 </button>
                 <button onclick="alert('Compare feature — coming in the next update! 🚀')" class="btn-glow px-4 py-1.5 text-xs font-semibold text-white rounded-lg cursor-pointer flex items-center gap-1.5">
@@ -646,22 +982,22 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- FOOTER                                                                -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <footer class="border-t border-white/5 py-8">
+    <footer class="py-8" style="border-top: 1px solid var(--border-primary);">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="text-gray-500 text-xs">
+            <p class="text-xs text-themed-muted">
                 &copy; 2026 Smart IRecom — AI iPhone Recommender System
             </p>
-            <div class="flex items-center gap-2 text-gray-500 text-xs">
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/3 border border-white/5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+            <div class="flex items-center gap-2 text-xs text-themed-muted">
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-primary-bg); border: 1px solid var(--border-primary);">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-primary);"></span>
                     Okapi BM25
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/3 border border-white/5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-secondary-bg); border: 1px solid var(--border-primary);">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-secondary);"></span>
                     Django 6.0
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/3 border border-white/5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-tertiary-bg); border: 1px solid var(--border-primary);">
+                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-tertiary);"></span>
                     Kecerdasan Buatan
                 </span>
             </div>
@@ -689,6 +1025,7 @@
             if (!input.value) {
                 input.focus();
             }
+            updateThemeIcons();
         });
 
         /**
@@ -717,6 +1054,29 @@
             });
             updateCompareBar();
         }
+
+        /**
+         * Theme toggle: switch between dark and light mode.
+         * Persisted in localStorage.
+         */
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelector('.sun-icon').style.display = isDark ? 'none' : 'block';
+            document.querySelector('.moon-icon').style.display = isDark ? 'block' : 'none';
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('smartirecom-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('smartirecom-theme', 'dark');
+            }
+            updateThemeIcons();
+        });
     </script>
+
 </body>
 </html>
