@@ -150,6 +150,7 @@ def load_products():
                 'kategori_varian': row.get('Kategori Varian', '').strip(),
                 'penyimpanan': row.get('penyimpanan', '').strip(),
                 'battery_health': battery_raw,
+                'battery_val': battery_val,
                 'battery_color': battery_color,
                 'harga': row.get('Harga', '').strip(),
                 'harga_raw': _parse_harga_raw(row.get('Harga', '')),

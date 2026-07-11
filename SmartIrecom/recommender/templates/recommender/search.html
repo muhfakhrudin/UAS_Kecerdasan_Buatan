@@ -566,6 +566,32 @@
         .search-input::placeholder {
             color: var(--text-muted);
         }
+
+        /* Filter Controls */
+        .filter-control {
+            background: transparent;
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .filter-control:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--glow-color-dim);
+        }
+        .dark .filter-control {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .dark .filter-control option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        html:not(.dark) .filter-control {
+            background: #ffffff;
+        }
     </style>
 </head>
 <body class="bg-mesh antialiased">
@@ -647,6 +673,53 @@
                             </svg>
                             Search with AI
                         </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Sort Panel -->
+                <div class="mt-4 p-4 rounded-2xl flex flex-wrap gap-3 items-center justify-center animate-fade-in" style="background: var(--bg-card); border: 1px solid var(--border-primary); backdrop-filter: blur(10px);">
+                    
+                    <!-- Sorting -->
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-themed-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
+                        <select name="sort" class="filter-control w-32">
+                            <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>AI Relevance</option>
+                            <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Harga Terendah</option>
+                            <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Harga Tertinggi</option>
+                            <option value="battery_desc" {% if sort_by == 'battery_desc' %}selected{% endif %}>Battery Terbaik</option>
+                        </select>
+                    </div>
+
+                    <div class="w-px h-6 bg-gray-500/20 hidden sm:block"></div>
+
+                    <!-- Price Filter -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-themed-muted font-medium">Rp</span>
+                        <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min" class="filter-control w-24">
+                        <span class="text-xs text-themed-muted">-</span>
+                        <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max" class="filter-control w-24">
+                    </div>
+
+                    <div class="w-px h-6 bg-gray-500/20 hidden sm:block"></div>
+
+                    <!-- Battery & Categories -->
+                    <div class="flex items-center gap-2">
+                        <select name="min_battery" class="filter-control w-28">
+                            <option value="">Semua Batre</option>
+                            <option value="80" {% if min_battery == '80' %}selected{% endif %}>≥ 80% Health</option>
+                            <option value="90" {% if min_battery == '90' %}selected{% endif %}>≥ 90% Health</option>
+                            <option value="100" {% if min_battery == '100' %}selected{% endif %}>100% Health</option>
+                        </select>
+                        <select name="platform" class="filter-control w-24">
+                            <option value="all">Semua Toko</option>
+                            <option value="Shopee" {% if platform == 'Shopee' %}selected{% endif %}>Shopee</option>
+                            <option value="Tokopedia" {% if platform == 'Tokopedia' %}selected{% endif %}>Tokopedia</option>
+                        </select>
+                        <select name="category" class="filter-control w-24">
+                            <option value="all">Semua Tipe</option>
+                            <option value="Resmi" {% if category == 'Resmi' %}selected{% endif %}>Resmi</option>
+                            <option value="Inter" {% if category == 'Inter' %}selected{% endif %}>Inter</option>
+                        </select>
                     </div>
                 </div>
 
@@ -771,7 +844,7 @@
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="results-grid">
             {% for product, score in results %}
-            <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col" style="animation-delay: {{ forloop.counter0 }}00ms;" data-product-id="{{ forloop.counter }}">
+            <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col cursor-pointer" style="animation-delay: {{ forloop.counter0 }}00ms;" data-product-id="{{ forloop.counter }}" onclick="openReceipt('modal-{{ forloop.counter }}')">
 
                 <!-- Card Header: Score Badge + Platform -->
                 <div class="flex items-center justify-between mb-4">
@@ -885,10 +958,73 @@
                             <div class="score-bar h-1 rounded-full" style="width: {% widthratio score max_score 100 %}%;"></div>
                         </div>
                     </div>
-                    <label class="flex items-center gap-1.5 cursor-pointer group/compare shrink-0" title="Add to comparison">
+                    <label class="flex items-center gap-1.5 cursor-pointer group/compare shrink-0" title="Add to comparison" onclick="event.stopPropagation()">
                         <input type="checkbox" class="compare-checkbox" data-product="{{ forloop.counter }}" onchange="updateCompareBar()">
                         <span class="text-[10px] text-themed-muted transition-colors select-none">Compare</span>
                     </label>
+                </div>
+            </div>
+
+            <!-- Receipt Modal -->
+            <div id="modal-{{ forloop.counter }}" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity" onclick="closeReceipt('modal-{{ forloop.counter }}')"></div>
+                <div class="relative w-full max-w-lg bg-white dark:bg-[#0c0e1a] rounded-xl shadow-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 overflow-y-auto animate-zoom-in flex flex-col justify-between" style="aspect-ratio: 3/4; max-height: 90vh;">
+                    
+                    <!-- Close button -->
+                    <button onclick="closeReceipt('modal-{{ forloop.counter }}')" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    
+                    <!-- Receipt Header -->
+                    <div class="text-center mb-6 border-b-2 border-dashed border-gray-300 dark:border-gray-700 pb-5">
+                        <h2 class="text-2xl font-black uppercase tracking-widest text-themed-primary">Smart IRecom</h2>
+                        <p class="text-xs text-themed-muted tracking-widest uppercase mt-1">Bukti Rekomendasi AI</p>
+                        <p class="text-sm font-semibold text-themed-secondary mt-3">{{ product.platform }} - {{ product.toko }}</p>
+                    </div>
+                    
+                    <!-- Receipt Body -->
+                    <div class="space-y-4 text-sm text-themed-secondary font-mono flex-1">
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Model:</span>
+                            <span class="font-bold text-themed-primary text-right">{{ product.kategori_varian }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Storage:</span>
+                            <span class="font-bold text-themed-primary text-right">{{ product.penyimpanan }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Battery:</span>
+                            <span class="font-bold text-themed-primary text-right">{% if product.battery_health %}{{ product.battery_health }}%{% else %}N/A{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Wilayah:</span>
+                            <span class="font-bold text-themed-primary text-right truncate max-w-[200px]" title="{{ product.wilayah_toko }}">{{ product.wilayah_toko }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Tipe:</span>
+                            <span class="font-bold text-themed-primary text-right">{{ product.kategori_iphone }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-themed-muted uppercase tracking-wider text-xs">Pembayaran:</span>
+                            <span class="font-bold text-themed-primary text-right truncate max-w-[150px]">{{ product.pembayaran }}</span>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-5 mt-6 flex justify-between items-end">
+                            <span class="uppercase tracking-widest font-bold text-themed-muted">Total</span>
+                            <span class="text-3xl font-black" style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ product.harga }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Receipt Footer -->
+                    <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-5 mt-6 text-center">
+                        <div class="flex justify-between items-center text-[11px] text-themed-muted uppercase tracking-widest font-bold">
+                            <span>Rank #{{ forloop.counter }}</span>
+                            <span>Score: {{ score }}</span>
+                        </div>
+                        
+                        <p class="text-[9px] text-themed-muted mt-4 tracking-widest uppercase">ID: SI-{{ forloop.counter }}00{{ product.harga_raw|default:"0" }}</p>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -1075,6 +1211,33 @@
                 localStorage.setItem('smartirecom-theme', 'dark');
             }
             updateThemeIcons();
+        });
+
+        // Receipt Modal logic
+        function openReceipt(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling background
+            }
+        }
+
+        function closeReceipt(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Close modal on Esc key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const openModals = document.querySelectorAll('[id^="modal-"]:not(.hidden)');
+                openModals.forEach(modal => closeReceipt(modal.id));
+            }
         });
     </script>
 

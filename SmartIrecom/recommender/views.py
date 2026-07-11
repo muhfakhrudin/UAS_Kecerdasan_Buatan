@@ -66,6 +66,15 @@ def search_view(request):
             - query_tokens (list[str]): Tokenized query words for highlighting
     """
     query = request.GET.get('q', '').strip()
+    
+    # Filter parameters
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+    min_battery = request.GET.get('min_battery', '')
+    category = request.GET.get('category', 'all')
+    platform = request.GET.get('platform', 'all')
+    sort_by = request.GET.get('sort', 'relevance')
+    
     results = []
     total_scanned = 0
     execution_time = 0.0
@@ -88,9 +97,52 @@ def search_view(request):
         threshold = max_score * 0.1
         
         all_matched = [(product, score) for product, score in scored_products if score > threshold and score > 0]
-        total_found = len(all_matched)  # Jumlah semua produk relevan (untuk metrik)
-        results_raw = all_matched[:15]  # Hanya tampilkan Top-15
-
+        
+        # ── Apply Hard Filters ──────────────────────────────────────────
+        filtered_matched = []
+        for product, score in all_matched:
+            # Price Filter
+            try:
+                if min_price and product.get('harga_raw', 0) < int(min_price):
+                    continue
+                if max_price and product.get('harga_raw', float('inf')) > int(max_price):
+                    continue
+            except ValueError:
+                pass
+                
+            # Battery Filter
+            try:
+                if min_battery:
+                    batt_val = product.get('battery_val')
+                    if batt_val is None or batt_val < int(min_battery):
+                        continue
+            except ValueError:
+                pass
+                
+            # Category Filter
+            if category and category.lower() != 'all':
+                if product.get('kategori_iphone', '').lower() != category.lower():
+                    continue
+                    
+            # Platform Filter
+            if platform and platform.lower() != 'all':
+                if product.get('platform', '').lower() != platform.lower():
+                    continue
+                    
+            filtered_matched.append((product, score))
+            
+        # ── Apply Sorting ───────────────────────────────────────────────
+        if sort_by == 'price_asc':
+            filtered_matched.sort(key=lambda x: x[0].get('harga_raw', float('inf')))
+        elif sort_by == 'price_desc':
+            filtered_matched.sort(key=lambda x: x[0].get('harga_raw', 0), reverse=True)
+        elif sort_by == 'battery_desc':
+            filtered_matched.sort(key=lambda x: x[0].get('battery_val') or 0, reverse=True)
+        # default 'relevance' maintains the BM25 order
+        
+        total_found = len(filtered_matched)  # Total relevant products after filtering
+        results_raw = filtered_matched[:15]  # Display Top-15
+        
         execution_time = time.time() - start_time
         # ────────────────────────────────────────────────────────────────
 
@@ -138,12 +190,19 @@ def search_view(request):
     context = {
         'query': query,
         'results': results,
-        'total_results': total_found if query else 0,  # Semua produk relevan ditemukan
-        'total_displayed': len(results),               # Yang ditampilkan (max 15)
+        'total_results': total_found if query else 0,
+        'total_displayed': len(results),
         'total_scanned': total_scanned,
         'execution_time': f"{execution_time:.4f}",
         'max_score': results[0][1] if results else 0,
         'query_tokens': list(query_tokens),
+        # Pass filters back to template to keep state
+        'min_price': min_price,
+        'max_price': max_price,
+        'min_battery': min_battery,
+        'category': category,
+        'platform': platform,
+        'sort_by': sort_by,
     }
 
     return render(request, 'recommender/search.html', context)
