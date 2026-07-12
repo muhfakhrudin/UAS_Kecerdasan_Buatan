@@ -600,13 +600,6 @@
     <!-- NAVIGATION BAR with Theme Toggle                                      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <nav class="relative z-30 flex items-center justify-between max-w-7xl mx-auto px-6 pt-5">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--btn-gradient);">
-                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-            </div>
-            <span class="text-sm font-bold text-themed-primary tracking-tight">Smart IRecom</span>
-        </div>
-
         <!-- Theme Toggle -->
         <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
             <div class="theme-toggle-knob">
@@ -630,14 +623,10 @@
         <div class="relative max-w-5xl mx-auto px-6 pt-12 pb-12 text-center">
             <!-- Brand -->
             <div class="animate-fade-in">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase mb-8" style="border: 1px solid var(--border-hover); background: var(--accent-primary-bg); color: var(--accent-primary);">
-                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                    Powered by Okapi BM25 Algorithm
-                </div>
 
                 <h1 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6">
                     <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                        Smart IRecom
+                        iRecom Master
                     </span>
                 </h1>
                 <p class="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed text-themed-secondary">
@@ -668,10 +657,7 @@
                             autocomplete="off"
                         >
                         <button type="submit" class="btn-glow text-white font-semibold px-6 py-3 mr-2 rounded-xl text-sm tracking-wide flex items-center gap-2 cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            Search with AI
+                            Cari Produk
                         </button>
                     </div>
                 </div>
@@ -683,10 +669,10 @@
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-themed-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
                         <select name="sort" class="filter-control w-32">
-                            <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>AI Relevance</option>
+                            <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Paling Relevan</option>
                             <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Harga Terendah</option>
                             <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Harga Tertinggi</option>
-                            <option value="battery_desc" {% if sort_by == 'battery_desc' %}selected{% endif %}>Battery Terbaik</option>
+                            <option value="battery_desc" {% if sort_by == 'battery_desc' %}selected{% endif %}>Baterai Terbaik</option>
                         </select>
                     </div>
 
@@ -705,7 +691,7 @@
                     <!-- Battery & Categories -->
                     <div class="flex items-center gap-2">
                         <select name="min_battery" class="filter-control w-28">
-                            <option value="">Semua Batre</option>
+                            <option value="">Semua Baterai</option>
                             <option value="80" {% if min_battery == '80' %}selected{% endif %}>≥ 80% Health</option>
                             <option value="90" {% if min_battery == '90' %}selected{% endif %}>≥ 90% Health</option>
                             <option value="100" {% if min_battery == '100' %}selected{% endif %}>100% Health</option>
@@ -745,17 +731,6 @@
         <!-- PERFORMANCE ANALYTICS DASHBOARD                                    -->
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <div class="analytics-glass rounded-2xl p-5 mb-8 animate-slide-up">
-            <div class="flex items-center gap-2 mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                    <span class="text-sm font-semibold text-themed-primary">BM25 Engine — Performance Analytics</span>
-                </div>
-                <span class="text-[10px] ml-auto uppercase tracking-widest text-themed-muted">Real-time Metrics</span>
-            </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- Metric 1: Database Scanned -->
                 <div class="metric-shimmer rounded-xl p-4 relative overflow-hidden" style="border: 1px solid var(--border-primary);">
@@ -816,11 +791,11 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 animate-fade-in">
             <div>
                 <h2 class="text-2xl font-bold text-themed-primary mb-1">
-                    Search Results
+                    Hasil Pencarian
                 </h2>
                 <p class="text-sm text-themed-secondary">
                     {% if results %}
-                        Found <span class="font-semibold text-accent-secondary">{{ total_results }}</span> matching products from <span class="text-themed-primary">{{ total_scanned }}</span> listings for
+                        Menemukan <span class="font-semibold text-accent-secondary">{{ total_results }}</span> Produk yang cocok dari <span class="text-themed-primary">{{ total_scanned }}</span> daftar untuk
                         "<span class="text-accent-primary">{{ query }}</span>"
                     {% else %}
                         No results found for "<span class="text-accent-primary">{{ query }}</span>"
@@ -828,13 +803,6 @@
                 </p>
             </div>
             {% if results %}
-            <div class="badge-status mt-3 sm:mt-0 px-3 py-1.5 rounded-lg text-xs font-medium">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background: var(--accent-primary);"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2" style="background: var(--accent-primary);"></span>
-                </span>
-                BM25 Algorithm Active
-            </div>
             {% endif %}
         </div>
 
@@ -851,33 +819,7 @@
                     <!-- AI Match Score Badge with Tooltip -->
                     <div class="tooltip-trigger">
                         <div class="badge-score px-3 py-1.5 cursor-help">
-                            <svg class="w-3.5 h-3.5" style="color: var(--accent-primary);" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                            <span class="text-xs">AI Match: {{ score }}</span>
-                            <svg class="w-3 h-3" style="color: var(--text-muted);" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-
-                        <!-- Tooltip: Score Transparency -->
-                        <div class="tooltip-content">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background: var(--accent-secondary-bg);">
-                                    <svg class="w-3.5 h-3.5" style="color: var(--accent-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                                    </svg>
-                                </div>
-                                <span class="text-xs font-bold text-themed-primary">Score Transparency</span>
-                            </div>
-                            <p class="text-[11px] leading-relaxed mb-2 text-themed-secondary">
-                                This score is computed using <span class="font-semibold text-accent-secondary">TF-IDF</span> word frequency weight against document length saturation.
-                            </p>
-                            <div class="flex items-center gap-3 text-[10px] pt-2 text-themed-muted" style="border-top: 1px solid var(--border-primary);">
-                                <span>k₁ = 1.5</span>
-                                <span>b = 0.75</span>
-                                <span>Algorithm: Okapi BM25</span>
-                            </div>
+                            <span class="text-xs">Skor Kecocokan: {{ score }}</span>
                         </div>
                     </div>
 
@@ -897,10 +839,6 @@
                 {% if product.matched_fields %}
                 <div class="flex flex-wrap gap-1.5 mb-3">
                     {% for field in product.matched_fields %}
-                    <span class="badge-matched px-2 py-0.5 text-[10px]">
-                        <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ field }} matched
-                    </span>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -958,10 +896,10 @@
                             <div class="score-bar h-1 rounded-full" style="width: {% widthratio score max_score 100 %}%;"></div>
                         </div>
                     </div>
-                    <label class="flex items-center gap-1.5 cursor-pointer group/compare shrink-0" title="Add to comparison" onclick="event.stopPropagation()">
-                        <input type="checkbox" class="compare-checkbox" data-product="{{ forloop.counter }}" onchange="updateCompareBar()">
-                        <span class="text-[10px] text-themed-muted transition-colors select-none">Compare</span>
-                    </label>
+                    <!-- <label class="flex items-center gap-1.5 cursor-pointer group/compare shrink-0" title="Add to comparison" onclick="event.stopPropagation()"> -->
+                        <!-- <input type="checkbox" class="compare-checkbox" data-product="{{ forloop.counter }}" onchange="updateCompareBar()"> -->
+                        <!-- <span class="text-[10px] text-themed-muted transition-colors select-none">Compare</span> -->
+                    <!-- </label> -->
                 </div>
             </div>
 
@@ -977,8 +915,8 @@
                     
                     <!-- Receipt Header -->
                     <div class="text-center mb-6 border-b-2 border-dashed border-gray-300 dark:border-gray-700 pb-5">
-                        <h2 class="text-2xl font-black uppercase tracking-widest text-themed-primary">Smart IRecom</h2>
-                        <p class="text-xs text-themed-muted tracking-widest uppercase mt-1">Bukti Rekomendasi AI</p>
+                        <h2 class="text-2xl font-black uppercase tracking-widest text-themed-primary">iRecom Master</h2>
+                        <p class="text-xs text-themed-muted tracking-widest uppercase mt-1">Struk Detail Rekomendasi</p>
                         <p class="text-sm font-semibold text-themed-secondary mt-3">{{ product.platform }} - {{ product.toko }}</p>
                     </div>
                     
@@ -1019,8 +957,8 @@
                     <!-- Receipt Footer -->
                     <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-5 mt-6 text-center">
                         <div class="flex justify-between items-center text-[11px] text-themed-muted uppercase tracking-widest font-bold">
-                            <span>Rank #{{ forloop.counter }}</span>
-                            <span>Score: {{ score }}</span>
+                            <span>Peringkat {{ forloop.counter }}</span>
+                            <span>Skor Kecocokan: {{ score }}</span>
                         </div>
                         
                         <p class="text-[9px] text-themed-muted mt-4 tracking-widest uppercase">ID: SI-{{ forloop.counter }}00{{ product.harga_raw|default:"0" }}</p>
@@ -1114,31 +1052,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- FOOTER                                                                -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <footer class="py-8" style="border-top: 1px solid var(--border-primary);">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="text-xs text-themed-muted">
-                &copy; 2026 Smart IRecom — AI iPhone Recommender System
-            </p>
-            <div class="flex items-center gap-2 text-xs text-themed-muted">
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-primary-bg); border: 1px solid var(--border-primary);">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-primary);"></span>
-                    Okapi BM25
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-secondary-bg); border: 1px solid var(--border-primary);">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-secondary);"></span>
-                    Django 6.0
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md" style="background: var(--accent-tertiary-bg); border: 1px solid var(--border-primary);">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background: var(--accent-tertiary);"></span>
-                    Kecerdasan Buatan
-                </span>
-            </div>
-        </div>
-    </footer>
 
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- JAVASCRIPT                                                            -->
