@@ -29,9 +29,9 @@
             --bg-primary: #0c0e1a;
             --bg-secondary: #111427;
             --bg-tertiary: #171b30;
-            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
-            --border-primary: rgba(255,255,255,0.06);
-            --border-hover: rgba(99, 102, 241, 0.45);
+            --bg-card: #12152a;
+            --border-primary: rgba(255,255,255,0.08);
+            --border-hover: rgba(129, 140, 248, 0.4);
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
             --text-muted: #8892a8;
@@ -40,19 +40,18 @@
             --accent-tertiary: #fbbf24;
             --accent-primary-bg: rgba(99, 102, 241, 0.12);
             --accent-secondary-bg: rgba(45, 212, 191, 0.12);
-            --mesh-1: rgba(99, 102, 241, 0.07);
-            --mesh-2: rgba(45, 212, 191, 0.05);
-            --glow-color-dim: rgba(99, 102, 241, 0.25);
             --row-hover: rgba(255,255,255,0.03);
             --table-border: rgba(255,255,255,0.07);
+            --btn-bg: #4f46e5;
+            --btn-bg-hover: #4338ca;
         }
         html:not(.dark) {
             --bg-primary: #f8fafc;
             --bg-secondary: #f1f5f9;
             --bg-tertiary: #e2e8f0;
-            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+            --bg-card: #ffffff;
             --border-primary: rgba(0,0,0,0.08);
-            --border-hover: rgba(99, 102, 241, 0.4);
+            --border-hover: rgba(99, 102, 241, 0.35);
             --text-primary: #0f172a;
             --text-secondary: #334155;
             --text-muted: #64748b;
@@ -61,21 +60,15 @@
             --accent-tertiary: #f59e0b;
             --accent-primary-bg: rgba(99, 102, 241, 0.08);
             --accent-secondary-bg: rgba(20, 184, 166, 0.08);
-            --mesh-1: rgba(99, 102, 241, 0.06);
-            --mesh-2: rgba(20, 184, 166, 0.04);
-            --glow-color-dim: rgba(99, 102, 241, 0.15);
             --row-hover: rgba(0,0,0,0.02);
             --table-border: rgba(0,0,0,0.08);
+            --btn-bg: #4f46e5;
+            --btn-bg-hover: #4338ca;
         }
 
         body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; transition: background 0.4s ease, color 0.4s ease; }
-        .bg-mesh {
-            background:
-                radial-gradient(ellipse at 20% 0%, var(--mesh-1) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 30%, var(--mesh-2) 0%, transparent 50%),
-                var(--bg-primary);
-        }
-        .card-glass { background: var(--bg-card); border: 1px solid var(--border-primary); backdrop-filter: blur(10px); border-radius: 1rem; }
+        .bg-mesh { background: var(--bg-primary); }
+        .card-glass { background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 1rem; }
         .text-themed-primary { color: var(--text-primary); }
         .text-themed-secondary { color: var(--text-secondary); }
         .text-themed-muted { color: var(--text-muted); }
@@ -83,10 +76,10 @@
 
         .search-bar-bg { background: var(--bg-secondary); }
         .search-input::placeholder { color: var(--text-muted); }
-        .search-input:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45), 0 0 24px var(--glow-color-dim); }
-        .btn-glow { background: linear-gradient(135deg, #6366f1, #4f46e5, #4338ca); box-shadow: 0 0 20px rgba(99, 102, 241, 0.35); transition: all 0.3s ease; }
-        .btn-glow:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.55); transform: translateY(-2px); }
-        .btn-glow:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .search-input:focus { box-shadow: 0 0 0 2px var(--border-hover); }
+        .btn-glow { background: var(--btn-bg); transition: background 0.15s ease; }
+        .btn-glow:hover { background: var(--btn-bg-hover); }
+        .btn-glow:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .query-row { transition: border-color 0.2s ease; }
         .query-row:focus-within { border-color: var(--border-hover) !important; }
@@ -133,10 +126,8 @@
     </nav>
 
     <header class="relative max-w-6xl mx-auto px-6 pt-8 pb-6 text-center">
-        <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-3">
-            <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                Bandingkan BM25 vs TF-IDF
-            </span>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-themed-primary">
+            Bandingkan BM25 vs TF-IDF
         </h1>
         <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-3">
             Masukkan satu query pilihan sendiri — dijalankan live lewat Okapi BM25 (metode utama) dan TF-IDF + Cosine Similarity (baseline) sekaligus, atas dataset asli yang sama.
@@ -160,6 +151,16 @@
 
     <main class="max-w-6xl mx-auto px-6 pb-16">
         {% if result %}
+        {% if result.validation_message %}
+        <div class="text-center py-16">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="background: var(--accent-tertiary-bg, rgba(251,191,36,0.12)); border: 1px solid rgba(251, 191, 36, 0.3);">
+                <svg class="w-8 h-8" style="color: var(--accent-tertiary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+            </div>
+            <p class="text-themed-primary font-semibold mb-1">Produk tidak tersedia</p>
+            <p class="text-themed-secondary">{{ result.validation_message }}</p>
+            <p class="text-[11px] text-themed-muted mt-3">0 hasil pada BM25 maupun TF-IDF — ranking tidak dijalankan karena produk yang diminta tidak ada di dataset.</p>
+        </div>
+        {% else %}
         <p class="text-xs text-themed-muted text-center mb-6">
             {{ total_scanned }} produk dipindai untuk query "{{ result.query }}"
         </p>
@@ -257,6 +258,7 @@
             </p>
             {% endif %}
         </div>
+        {% endif %}
 
         {% else %}
         <div class="text-center py-16">

@@ -12,7 +12,7 @@ from django.utils.safestring import mark_safe
 
 
 def _highlight_keywords(text, query_tokens):
-    """Wrap matching query keywords in a neon-styled HTML span (case-insensitive)."""
+    """Wrap matching query keywords in a highlighted HTML span (case-insensitive)."""
     if not text or not query_tokens:
         return text
 
@@ -77,7 +77,7 @@ def _apply_sort(matches, sort_by):
 
 
 def _build_highlighted_results(results_raw, query_tokens):
-    """Attach keyword-highlighted display fields and matched-field badges to each ranked product."""
+    """Attach keyword-highlighted display fields to each ranked product."""
     results = []
     for product, score in results_raw:
         highlighted_product = dict(product)  # Shallow copy
@@ -96,24 +96,6 @@ def _build_highlighted_results(results_raw, query_tokens):
         highlighted_product['wilayah_toko_hl'] = _highlight_keywords(
             product['wilayah_toko'], query_tokens
         )
-        highlighted_product['platform_hl'] = _highlight_keywords(
-            product['platform'], query_tokens
-        )
-        matched_fields = []
-        for field_name, field_key in [
-            ('Varian', 'kategori_varian'),
-            ('Storage', 'penyimpanan'),
-            ('Platform', 'platform'),
-            ('Wilayah', 'wilayah_toko'),
-            ('Toko', 'toko'),
-            ('Battery', 'battery_health'),
-        ]:
-            field_val = product.get(field_key, '')
-            if field_val:
-                field_tokens = set(re.findall(r'[a-z0-9]+', field_val.lower()))
-                if field_tokens & query_tokens:
-                    matched_fields.append(field_name)
-        highlighted_product['matched_fields'] = matched_fields
 
         results.append((highlighted_product, score))
     return results

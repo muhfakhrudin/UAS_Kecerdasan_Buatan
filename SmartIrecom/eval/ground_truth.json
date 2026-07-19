@@ -1,0 +1,27 @@
+{
+  "relevance_criteria": "A product is relevant to a query iff it satisfies ALL explicit constraints listed for that query (AND semantics), matched against the raw product attributes from dataset_iphone.csv (kategori_varian, penyimpanan, platform, wilayah_toko substring, kategori_iphone, battery_val >= threshold). Derived deterministically from the real, currently-loaded dataset — no relevance judgment is hand-typed.",
+  "num_queries": 5,
+  "k": 10,
+  "queries": [
+    {
+      "query": "iPhone 11 64GB",
+      "num_relevant": 27
+    },
+    {
+      "query": "iPhone 12 128GB Shopee",
+      "num_relevant": 8
+    },
+    {
+      "query": "iPhone 13 Pro battery diatas 90",
+      "num_relevant": 24
+    },
+    {
+      "query": "iPhone 11 Pro 256GB Jakarta",
+      "num_relevant": 3
+    },
+    {
+      "query": "iPhone 12 Pro 128GB Resmi",
+      "num_relevant": 41
+    }
+  ]
+}

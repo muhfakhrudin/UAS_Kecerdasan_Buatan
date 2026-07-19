@@ -167,6 +167,92 @@ def parse_query_constraints(query, products):
     return constraints
 
 
+# ─── Catalog validation: reject explicit model/storage requests the ────────
+# ─── dataset genuinely has nothing for, before they ever reach ranking. ────
+
+# "iphone" + a model number, optionally followed by one variant modifier
+# word ("Pro Max" / "Pro" / "Mini" / ...). Requires a real space before the
+# modifier (and a word boundary after it) so it can't grab a fragment out of
+# an unrelated following word (e.g. "iPhone 11 processor").
+_VARIANT_QUERY_RE = re.compile(
+    r'iphone\s*(\d+)(?:\s+(pro\s*max|pro|mini|max|plus|se)\b)?',
+    re.IGNORECASE,
+)
+_STORAGE_QUERY_RE = re.compile(r'\b(\d+)\s*(gb|tb)\b', re.IGNORECASE)
+
+_VARIANT_MODIFIER_TITLES = {
+    'pro max': 'Pro Max',
+    'pro': 'Pro',
+    'mini': 'Mini',
+    'max': 'Max',
+    'plus': 'Plus',
+    'se': 'SE',
+}
+
+
+def validate_catalog_query(query, products):
+    """
+    Check whether an EXPLICIT iPhone model and/or storage capacity typed in
+    `query` actually exists in the dataset, before any ranking runs.
+
+    This exists because BM25 partially matches on generic tokens: a query
+    like "iPhone 16" still scores nonzero against real "iPhone 11/12/13"
+    listings purely because they all share the token "iphone", even though
+    the model itself doesn't exist in the catalog at all. TF-IDF's stricter
+    weighting already returns nothing for such queries; this makes BM25
+    agree instead of surfacing near-zero-score matches as if they were real
+    recommendations.
+
+    Only explicit, structured mentions are checked (a model number right
+    after "iphone", or a number immediately followed by "GB"/"TB") — never
+    free-text words with no catalog meaning, so "iPhone 11 murah" still
+    matches "iPhone 11" fine; "murah" simply isn't a recognized attribute.
+
+    Args:
+        query (str): The raw, untokenized search query.
+        products (list[dict]): Product dicts from search_engine.load_products().
+
+    Returns:
+        dict: {'valid': bool, 'message': str | None} — message is only set
+            when valid is False, in Indonesian, ready to show to the user.
+    """
+    variant_values = _distinct_values(products, 'kategori_varian')
+    storage_values = _distinct_values(products, 'penyimpanan')
+    variant_lookup = {v.lower() for v in variant_values}
+    storage_lookup = {s.lower() for s in storage_values}
+
+    variant_match = _VARIANT_QUERY_RE.search(query)
+    requested_variant = None
+    if variant_match:
+        number = variant_match.group(1)
+        modifier_raw = re.sub(r'\s+', ' ', (variant_match.group(2) or '').strip().lower())
+        modifier_title = _VARIANT_MODIFIER_TITLES.get(modifier_raw, '')
+        requested_variant = f"iPhone {number}" + (f" {modifier_title}" if modifier_title else '')
+
+        if requested_variant.lower() not in variant_lookup:
+            number_exists = any(
+                re.match(rf'iphone\s*{re.escape(number)}\b', v, re.IGNORECASE)
+                for v in variant_values
+            )
+            if not number_exists:
+                return {'valid': False, 'message': f"iPhone {number} tidak tersedia pada dataset."}
+            return {'valid': False, 'message': f"{requested_variant} tidak tersedia pada dataset."}
+
+    storage_match = _STORAGE_QUERY_RE.search(query)
+    if storage_match:
+        value, unit = storage_match.groups()
+        requested_storage = f"{value}{unit.upper()}"
+        if requested_storage.lower() not in storage_lookup:
+            if requested_variant:
+                return {
+                    'valid': False,
+                    'message': f"Varian {requested_variant} dengan storage {requested_storage} tidak tersedia pada dataset.",
+                }
+            return {'valid': False, 'message': f"Storage {requested_storage} tidak tersedia pada dataset."}
+
+    return {'valid': True, 'message': None}
+
+
 # ─── Metrics (Tahap 5) ──────────────────────────────────────────────────────
 
 def precision_at_k(ranked_doc_ids, relevant_doc_ids, k=K):

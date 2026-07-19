@@ -37,6 +37,7 @@ from .evaluation import (
     parse_query_constraints,
     precision_at_k,
     recall_at_k,
+    validate_catalog_query,
 )
 from .ranking import rank_products
 from .search_engine import calculate_bm25_scores, load_products
@@ -82,6 +83,7 @@ def search_view(request):
     execution_time = 0.0
     tfidf_execution_time = 0.0
     query_tokens = set()
+    validation_message = None
 
     if query:
         query_tokens = set(re.findall(r'[a-z0-9]+', query.lower()))
@@ -89,21 +91,26 @@ def search_view(request):
         products = load_products()
         total_scanned = len(products)
 
-        start_time = time.time()
-        results, total_found = rank_products(
-            calculate_bm25_scores, query, products, query_tokens,
-            min_price, max_price, min_battery, category, platform, sort_by,
-        )
-        execution_time = time.time() - start_time
+        validation = validate_catalog_query(query, products)
+        if not validation['valid']:
+            validation_message = validation['message']
+        else:
+            start_time = time.time()
+            results, total_found = rank_products(
+                calculate_bm25_scores, query, products, query_tokens,
+                min_price, max_price, min_battery, category, platform, sort_by,
+            )
+            execution_time = time.time() - start_time
 
-        start_time = time.time()
-        tfidf_results, tfidf_total_found = rank_products(
-            calculate_tfidf_cosine_scores, query, products, query_tokens,
-            min_price, max_price, min_battery, category, platform, sort_by,
-        )
-        tfidf_execution_time = time.time() - start_time
+            start_time = time.time()
+            tfidf_results, tfidf_total_found = rank_products(
+                calculate_tfidf_cosine_scores, query, products, query_tokens,
+                min_price, max_price, min_battery, category, platform, sort_by,
+            )
+            tfidf_execution_time = time.time() - start_time
 
     context = {
+        'validation_message': validation_message,
         'query': query,
         'results': results,
         'total_results': total_found if query else 0,
@@ -155,6 +162,13 @@ def _evaluate_query(query, products):
     Shared by compare_view (1 query) and multi_query_evaluation_view (5
     queries) so the ranking/metrics logic lives in exactly one place.
 
+    Before ranking, validate_catalog_query() checks whether an explicitly
+    requested model/storage actually exists in the dataset (e.g. "iPhone
+    16" — BM25 would otherwise still return near-zero-score matches just
+    from the shared "iphone" token). When it doesn't, ranking is skipped
+    entirely and both result lists come back empty, with 'validation_message'
+    set to an explanatory notice instead of 'metrics'.
+
     Returns:
         dict: {
             'query': str,
@@ -163,8 +177,23 @@ def _evaluate_query(query, products):
             'metrics': dict or None — None when no structured attributes
                 (variant/storage/platform/battery/region) could be detected
                 in the query text, i.e. no ground truth is derivable.
+            'validation_message': str or None — set (and 'metrics' left
+                None) when the query explicitly names a model/storage the
+                dataset doesn't have, so ranking never even ran.
         }
     """
+    validation = validate_catalog_query(query, products)
+    if not validation['valid']:
+        return {
+            'query': query,
+            'bm25_results': [],
+            'bm25_time': 0.0,
+            'tfidf_results': [],
+            'tfidf_time': 0.0,
+            'metrics': None,
+            'validation_message': validation['message'],
+        }
+
     query_tokens = set(re.findall(r'[a-z0-9]+', query.lower()))
 
     start_time = time.time()
@@ -204,6 +233,7 @@ def _evaluate_query(query, products):
         'tfidf_results': tfidf_results,
         'tfidf_time': tfidf_time,
         'metrics': metrics,
+        'validation_message': None,
     }
 
 
@@ -247,11 +277,14 @@ def multi_query_evaluation_view(request):
     Accepts exactly MULTI_QUERY_COUNT (5) named GET params 'query1'..
     'query5' (a 'submitted' marker distinguishes a fresh page load from a
     submission with empty fields). Each query is ranked via the same
-    _evaluate_query() compare_view uses, then Precision/Recall/Hit
-    Rate/NDCG@10 and execution time are averaged across the two methods —
-    but only over queries where ground truth could actually be derived,
-    never padding in a fabricated 0 for the rest (same rule as
-    compare_view and the paper's run_evaluation()).
+    _evaluate_query() compare_view uses, which also gates each one through
+    validate_catalog_query() — a query naming a model/storage the dataset
+    doesn't have gets a validation notice instead of ranking, and is
+    excluded from every average below (Precision/Recall/Hit Rate/NDCG@10
+    AND execution time), never padding in a fabricated 0/result for it.
+    Among the remaining ranked queries, Precision/Recall/Hit Rate/NDCG@10
+    are further averaged only over those with derivable ground truth (same
+    rule as compare_view and the paper's run_evaluation()).
 
     This is a visitor-run experiment, not the paper's official numbers —
     the template labels it explicitly as a demo.
@@ -279,10 +312,27 @@ def multi_query_evaluation_view(request):
             summary_totals = {method: Counter() for method in METRIC_METHODS}
             time_totals_ms = {method: 0.0 for method in METRIC_METHODS}
             num_with_ground_truth = 0
+            num_valid = 0
 
             for query in non_empty:
                 evaluated = _evaluate_query(query, products)
 
+                if evaluated['validation_message']:
+                    # Explicitly requested model/storage doesn't exist —
+                    # ranking never ran, so this query is excluded from
+                    # every average below (metrics AND execution time).
+                    query_results.append({
+                        'query': query,
+                        'bm25_results': [],
+                        'bm25_time_ms': None,
+                        'tfidf_results': [],
+                        'tfidf_time_ms': None,
+                        'metrics': None,
+                        'validation_message': evaluated['validation_message'],
+                    })
+                    continue
+
+                num_valid += 1
                 time_totals_ms['Okapi BM25'] += evaluated['bm25_time'] * 1000
                 time_totals_ms['TF-IDF + Cosine Similarity'] += evaluated['tfidf_time'] * 1000
 
@@ -299,6 +349,7 @@ def multi_query_evaluation_view(request):
                     'tfidf_results': evaluated['tfidf_results'],
                     'tfidf_time_ms': f"{evaluated['tfidf_time'] * 1000:.2f}",
                     'metrics': evaluated['metrics'],
+                    'validation_message': None,
                 })
 
             summary = None
@@ -309,7 +360,7 @@ def multi_query_evaluation_view(request):
                             key: summary_totals[method][key] / num_with_ground_truth
                             for key in ('precision_at_k', 'recall_at_k', 'hit_rate_at_k', 'ndcg_at_k')
                         },
-                        'avg_time_ms': time_totals_ms[method] / MULTI_QUERY_COUNT,
+                        'avg_time_ms': time_totals_ms[method] / num_valid,
                     }
                     for method in METRIC_METHODS
                 }
@@ -318,6 +369,7 @@ def multi_query_evaluation_view(request):
                 'total_scanned': total_scanned,
                 'query_results': query_results,
                 'num_with_ground_truth': num_with_ground_truth,
+                'num_valid': num_valid,
                 'summary': summary,
             }
 
