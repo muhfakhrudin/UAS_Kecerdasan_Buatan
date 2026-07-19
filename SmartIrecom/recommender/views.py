@@ -39,7 +39,7 @@ from .evaluation import (
     recall_at_k,
     validate_catalog_query,
 )
-from .ranking import rank_products
+from .ranking import parse_price_constraints, rank_products
 from .search_engine import calculate_bm25_scores, load_products
 from .tfidf_engine import calculate_tfidf_cosine_scores
 
@@ -54,6 +54,13 @@ def search_view(request):
     identical threshold/filter/sort pipeline (recommender/ranking.py), so
     the two methods are only ever compared on ranking, never on
     diverging filter logic.
+
+    recommender.ranking.parse_price_constraints() also scans the query
+    text itself for a simple Indonesian price phrase ("dibawah 3 juta"),
+    applying it as a real max/min-price hard filter whenever the user
+    hasn't already set that bound via the explicit filter fields — so a
+    price mentioned in the query narrows results instead of being inert
+    noise for BM25/TF-IDF to (weakly) "match" on.
 
     Returns:
         HttpResponse: Rendered search.html template with context containing:
@@ -84,6 +91,7 @@ def search_view(request):
     tfidf_execution_time = 0.0
     query_tokens = set()
     validation_message = None
+    detected_price_notice = None
 
     if query:
         query_tokens = set(re.findall(r'[a-z0-9]+', query.lower()))
@@ -95,22 +103,34 @@ def search_view(request):
         if not validation['valid']:
             validation_message = validation['message']
         else:
+            # An explicit filter field always wins; a price phrase typed
+            # into the query itself ("dibawah 3 juta") only fills in
+            # whichever bound the user didn't already set via the form.
+            detected_max_price, detected_min_price = parse_price_constraints(query)
+            effective_max_price = max_price or (str(detected_max_price) if detected_max_price else '')
+            effective_min_price = min_price or (str(detected_min_price) if detected_min_price else '')
+            if not max_price and detected_max_price:
+                detected_price_notice = f"maksimal Rp{detected_max_price:,}".replace(',', '.')
+            elif not min_price and detected_min_price:
+                detected_price_notice = f"minimal Rp{detected_min_price:,}".replace(',', '.')
+
             start_time = time.time()
             results, total_found = rank_products(
                 calculate_bm25_scores, query, products, query_tokens,
-                min_price, max_price, min_battery, category, platform, sort_by,
+                effective_min_price, effective_max_price, min_battery, category, platform, sort_by,
             )
             execution_time = time.time() - start_time
 
             start_time = time.time()
             tfidf_results, tfidf_total_found = rank_products(
                 calculate_tfidf_cosine_scores, query, products, query_tokens,
-                min_price, max_price, min_battery, category, platform, sort_by,
+                effective_min_price, effective_max_price, min_battery, category, platform, sort_by,
             )
             tfidf_execution_time = time.time() - start_time
 
     context = {
         'validation_message': validation_message,
+        'detected_price_notice': detected_price_notice,
         'query': query,
         'results': results,
         'total_results': total_found if query else 0,

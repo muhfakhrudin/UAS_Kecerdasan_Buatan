@@ -695,6 +695,11 @@
                         No results found for "<span class="text-accent-primary">{{ query }}</span>"
                     {% endif %}
                 </p>
+                {% if detected_price_notice %}
+                <p class="text-xs text-accent-tertiary mt-1">
+                    Terdeteksi filter harga dari kata kunci: {{ detected_price_notice }}
+                </p>
+                {% endif %}
             </div>
         </div>
 

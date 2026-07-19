@@ -2,13 +2,18 @@
 Tests for catalog query validation (recommender/evaluation.py's
 validate_catalog_query) — guards against BM25 surfacing near-zero-score
 matches for models/storage that don't exist in the dataset at all (e.g.
-"iPhone 16" partially matching on the generic shared token "iphone").
+"iPhone 16" partially matching on the generic shared token "iphone") —
+and for the relevance floor / price-phrase parsing in recommender/ranking.py
+that guards against the same kind of near-zero-score phantom matches for
+vague queries with no real distinguishing signal (e.g. "iphone second
+murah").
 """
 
 from django.test import TestCase
 from django.urls import reverse
 
 from .evaluation import validate_catalog_query
+from .ranking import parse_price_constraints
 from .search_engine import load_products
 
 
@@ -69,6 +74,46 @@ class SearchViewCatalogValidationTests(TestCase):
         response = self.client.get(reverse('recommender:search'), {'q': 'iPhone 11 murah'})
         self.assertGreater(response.context['total_results'], 0)
         self.assertIsNone(response.context['validation_message'])
+
+    def test_vague_query_with_no_real_signal_returns_zero_results(self):
+        """"iphone" matches 100% of the catalog with a near-zero BM25 score
+        and no other query term matches anything — should be 0 results,
+        not the entire catalog in meaningless order."""
+        response = self.client.get(reverse('recommender:search'), {'q': 'iphone second murah'})
+        self.assertEqual(response.context['total_results'], 0)
+        self.assertEqual(response.context['tfidf_total_results'], 0)
+
+    def test_price_phrase_in_query_text_filters_by_price(self):
+        response = self.client.get(reverse('recommender:search'), {'q': 'iphone second dibawah 3 juta'})
+        self.assertGreater(response.context['total_results'], 0)
+        self.assertEqual(response.context['detected_price_notice'], 'maksimal Rp3.000.000')
+        for product, _ in response.context['results']:
+            self.assertLessEqual(product['harga_raw'], 3_000_000)
+
+    def test_explicit_price_field_wins_over_detected_price_phrase(self):
+        response = self.client.get(reverse('recommender:search'), {
+            'q': 'iphone dibawah 3 juta',
+            'max_price': '5000000',
+        })
+        # The explicit field (5jt) should be used, not the phrase in the query (3jt).
+        self.assertIsNone(response.context['detected_price_notice'])
+        for product, _ in response.context['results']:
+            self.assertLessEqual(product['harga_raw'], 5_000_000)
+
+
+class ParsePriceConstraintsTests(TestCase):
+    def test_detects_under_price_in_juta(self):
+        self.assertEqual(parse_price_constraints('iphone dibawah 3 juta'), (3_000_000, None))
+
+    def test_detects_over_price_in_ribu(self):
+        self.assertEqual(parse_price_constraints('iphone di atas 500 ribu'), (None, 500_000))
+
+    def test_ignores_unrelated_numbers_without_a_price_unit(self):
+        # "128GB" and "90%" must never be misread as a price.
+        self.assertEqual(parse_price_constraints('iPhone 12 128GB battery 90'), (None, None))
+
+    def test_no_price_phrase_returns_none_none(self):
+        self.assertEqual(parse_price_constraints('iphone second murah'), (None, None))
 
 
 class CompareViewCatalogValidationTests(TestCase):
