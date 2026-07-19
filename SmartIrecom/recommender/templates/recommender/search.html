@@ -704,7 +704,7 @@
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="results-grid">
             {% for product, score in results %}
-            <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col cursor-pointer" style="animation-delay: {{ forloop.counter0 }}00ms;" data-product-id="{{ forloop.counter }}" onclick="openReceipt('modal-{{ forloop.counter }}')">
+            <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col cursor-pointer" data-stagger-index="{{ forloop.counter0 }}" data-product-id="{{ forloop.counter }}" onclick="openReceipt('modal-{{ forloop.counter }}')">
 
                 <!-- Card Header: Score Badge + Platform -->
                 <div class="flex items-center justify-between mb-4">
@@ -776,10 +776,11 @@
                 </div>
 
                 <!-- Score Bar -->
+                {% widthratio score max_score 100 as score_pct %}
                 <div class="mt-3 flex items-center gap-3">
                     <div class="flex-1">
                         <div class="w-full rounded-full h-1 overflow-hidden" style="background: var(--border-primary);">
-                            <div class="score-bar h-1 rounded-full" style="width: {% widthratio score max_score 100 %}%;"></div>
+                            <div class="score-bar h-1 rounded-full" data-width-pct="{{ score_pct }}" style="width: 0%;"></div>
                         </div>
                     </div>
                 </div>
@@ -997,6 +998,19 @@
                 input.focus();
             }
             updateThemeIcons();
+
+            // Apply each product's score-bar width (set via data-width-pct
+            // rather than an inline template expression in `style`).
+            document.querySelectorAll('.score-bar[data-width-pct]').forEach(function(bar) {
+                bar.style.width = bar.dataset.widthPct + '%';
+            });
+
+            // Apply each product card's staggered entrance delay (set via
+            // data-stagger-index rather than an inline template expression
+            // in `style`).
+            document.querySelectorAll('.card-stagger[data-stagger-index]').forEach(function(card) {
+                card.style.animationDelay = (card.dataset.staggerIndex * 100) + 'ms';
+            });
         });
 
         /**
