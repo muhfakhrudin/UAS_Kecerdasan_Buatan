@@ -515,6 +515,17 @@
                 </p>
             </div>
 
+            <!-- AI Decision Module Trigger -->
+            <div class="mb-8 max-w-3xl mx-auto flex justify-between items-center search-bar-bg rounded-2xl p-4 sm:p-5 text-left shadow-lg" style="border: 1px solid var(--border-primary);">
+                <div>
+                    <h3 class="font-bold text-indigo-400">Bingung Memilih iPhone yang Tepat?</h3>
+                    <p class="text-sm text-themed-secondary">Gunakan Fitur <span class="font-bold text-themed-primary">Smart Decision Making</span> untuk menemukan Produk iPhone terbaik berdasarkan kriteria ideal Anda.</p>
+                </div>
+                <a href="{% url 'recommender:wizard' %}" target="_blank" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 flex items-center gap-2 shrink-0 ml-4" style="background: var(--btn-gradient, linear-gradient(135deg, #6366f1, #4f46e5));">
+                    Mulai Tahap
+                </a>
+            </div>
+
             <!-- Search Bar -->
             <form method="GET" action="{% url 'recommender:search' %}" class="max-w-3xl mx-auto">
                 <div class="relative">
@@ -707,6 +718,9 @@
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <!-- BENTO GRID LAYOUT                                                  -->
         <!-- ════════════════════════════════════════════════════════════════════ -->
+        
+
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="results-grid">
             {% for product, score in results %}
             <div class="card-glass rounded-2xl p-5 card-stagger group flex flex-col cursor-pointer" data-stagger-index="{{ forloop.counter0 }}" data-product-id="{{ forloop.counter }}" onclick="openReceipt('modal-{{ forloop.counter }}')">
@@ -791,69 +805,84 @@
                 </div>
             </div>
 
-            <!-- Receipt Modal -->
+            <!-- Receipt Modal (Horizontal Split Layout) -->
             <div id="modal-{{ forloop.counter }}" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity" onclick="closeReceipt('modal-{{ forloop.counter }}')"></div>
-                <div class="relative w-full max-w-lg bg-white dark:bg-[#0c0e1a] rounded-xl shadow-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 overflow-y-auto flex flex-col justify-between" style="aspect-ratio: 3/4; max-height: 90vh;">
+                <div class="relative w-full max-w-2xl bg-white dark:bg-[#0c0e1a] rounded-xl shadow-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-800 flex flex-col justify-between max-h-[85vh] overflow-hidden transition-all duration-300">
                     
                     <!-- Close button -->
-                    <button onclick="closeReceipt('modal-{{ forloop.counter }}')" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors">
+                    <button onclick="closeReceipt('modal-{{ forloop.counter }}')" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 transition-colors z-20">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                     
                     <!-- Receipt Header -->
-                    <div class="text-center mb-6 border-b-2 border-dashed border-gray-300 dark:border-gray-700 pb-5">
+                    <div class="text-center mb-4 border-b-2 border-dashed border-gray-300 dark:border-gray-700 pb-4">
                         <h2 class="text-2xl font-black uppercase tracking-widest text-themed-primary">iRecom Master</h2>
                         <p class="text-xs text-themed-muted tracking-widest uppercase mt-1">Struk Detail Rekomendasi</p>
-                        <p class="text-sm font-semibold text-themed-secondary mt-3">{{ product.platform }} - {{ product.toko }}</p>
                     </div>
                     
-                    <!-- Receipt Body -->
-                    <div class="space-y-4 text-sm text-themed-secondary font-mono flex-1">
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Model:</span>
-                            <span class="font-bold text-themed-primary text-right">{{ product.kategori_varian }}</span>
+                    <!-- Receipt Body Split-screen -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-y-auto pr-1 text-sm font-mono text-themed-secondary pb-4 pt-2">
+                        <!-- Left Panel: Store & Platform details -->
+                        <div class="space-y-4 border-r-0 md:border-r-2 border-dashed border-gray-200 dark:border-gray-800 pr-0 md:pr-6 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Platform:</span>
+                                <span class="font-bold text-themed-primary">{{ product.platform }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Toko:</span>
+                                <span class="font-bold text-themed-primary">{{ product.toko }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Wilayah:</span>
+                                <span class="font-bold text-themed-primary">{{ product.wilayah_toko }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Pembayaran:</span>
+                                <span class="font-bold text-themed-primary">{{ product.pembayaran }}</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Storage:</span>
-                            <span class="font-bold text-themed-primary text-right">{{ product.penyimpanan }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Battery:</span>
-                            <span class="font-bold text-themed-primary text-right">
-                                {% if product.battery_health %}{{ product.battery_health }}%
-                                {% elif product.battery_is_imputed %}≈{{ product.battery_val|floatformat:0 }}% <span class="text-[10px] font-normal italic">(estimasi)</span>
-                                {% else %}N/A{% endif %}
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Wilayah:</span>
-                            <span class="font-bold text-themed-primary text-right truncate max-w-[200px]" title="{{ product.wilayah_toko }}">{{ product.wilayah_toko }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Tipe:</span>
-                            <span class="font-bold text-themed-primary text-right">{{ product.kategori_iphone }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-themed-muted uppercase tracking-wider text-xs">Pembayaran:</span>
-                            <span class="font-bold text-themed-primary text-right truncate max-w-[150px]">{{ product.pembayaran }}</span>
-                        </div>
-                        
-                        <!-- Total -->
-                        <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-5 mt-6 flex justify-between items-end">
-                            <span class="uppercase tracking-widest font-bold text-themed-muted">Total</span>
-                            <span class="text-3xl font-bold text-themed-primary">{{ product.harga }}</span>
+
+                        <!-- Right Panel: Spec and Price details -->
+                        <div class="space-y-4 flex flex-col justify-between text-sm">
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Model:</span>
+                                    <span class="font-bold text-themed-primary">{{ product.kategori_varian }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Storage:</span>
+                                    <span class="font-bold text-themed-primary">{{ product.penyimpanan }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Battery Health:</span>
+                                    <span class="font-bold text-themed-primary">
+                                        {% if product.battery_health %}{{ product.battery_health }}%
+                                        {% elif product.battery_is_imputed %}≈{{ product.battery_val|floatformat:0 }}% <span class="text-xs font-normal italic">(estimasi)</span>
+                                        {% else %}N/A{% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-themed-muted uppercase tracking-wider text-xs sm:text-sm">Tipe:</span>
+                                    <span class="font-bold text-themed-primary">{{ product.kategori_iphone }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Total Price -->
+                            <div class="border-t border-dotted border-gray-300 dark:border-gray-700 pt-3 mt-4 flex justify-between items-end">
+                                <span class="uppercase tracking-widest font-bold text-themed-muted text-xs sm:text-sm">Total Harga</span>
+                                <span class="text-2xl font-black text-themed-primary">{{ product.harga }}</span>
+                            </div>
                         </div>
                     </div>
-                    
+
                     <!-- Receipt Footer -->
-                    <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-5 mt-6 text-center">
+                    <div class="border-t-2 border-dashed border-gray-300 dark:border-gray-700 pt-3 text-center">
                         <div class="flex justify-between items-center text-[11px] text-themed-muted uppercase tracking-widest font-bold">
                             <span>Peringkat {{ forloop.counter }}</span>
                             <span>Skor Kecocokan: {{ score }}</span>
                         </div>
-                        
-                        <p class="text-[9px] text-themed-muted mt-4 tracking-widest uppercase">ID: SI-{{ forloop.counter }}00{{ product.harga_raw|default:"0" }}</p>
+                        <p class="text-[8px] text-themed-muted mt-2 tracking-widest uppercase">ID: SI-{{ forloop.counter }}00{{ product.harga_raw|default:"0" }}</p>
                     </div>
                 </div>
             </div>
@@ -900,7 +929,7 @@
                             <p class="text-[10px] text-themed-muted mt-0.5">{{ total_results }} hasil · {{ execution_time }}s</p>
                         </div>
                     </div>
-                    {% for product, score in results|slice:":10" %}
+                    {% for product, score in results|slice:":15" %}
                     <div class="compare-row">
                         <span class="compare-rank">{{ forloop.counter }}</span>
                         <div class="flex-1 min-w-0">
@@ -1064,9 +1093,11 @@
             if (event.key === 'Escape') {
                 const openModals = document.querySelectorAll('[id^="modal-"]:not(.hidden)');
                 openModals.forEach(modal => closeReceipt(modal.id));
+                closeWizard();
             }
         });
     </script>
+
 
 </body>
 </html>

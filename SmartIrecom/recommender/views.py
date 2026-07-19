@@ -24,6 +24,7 @@ notice rather than a fabricated 0. Both share _evaluate_query() below so
 the ranking/metrics logic exists in exactly one place.
 """
 
+import json
 import re
 import time
 from collections import Counter
@@ -93,11 +94,11 @@ def search_view(request):
     validation_message = None
     detected_price_notice = None
 
+    products = load_products()
+    total_scanned = len(products)
+
     if query:
         query_tokens = set(re.findall(r'[a-z0-9]+', query.lower()))
-
-        products = load_products()
-        total_scanned = len(products)
 
         validation = validate_catalog_query(query, products)
         if not validation['valid']:
@@ -127,6 +128,27 @@ def search_view(request):
                 effective_min_price, effective_max_price, min_battery, category, platform, sort_by,
             )
             tfidf_execution_time = time.time() - start_time
+            
+            # Prepare full database pool for Wizard
+            bm25_scored = calculate_bm25_scores(query, products)
+            recom_pool = []
+            for p, s in bm25_scored:
+                recom_pool.append({
+                    'toko': p['toko'],
+                    'platform': p['platform'],
+                    'kategori_seri': p['kategori_seri'],
+                    'kategori_varian': p['kategori_varian'],
+                    'penyimpanan': p['penyimpanan'],
+                    'battery_health': p['battery_health'],
+                    'battery_val': p.get('battery_val'),
+                    'harga': p['harga'],
+                    'harga_raw': p['harga_raw'],
+                    'pembayaran': p['pembayaran'],
+                    'wilayah_toko': p['wilayah_toko'],
+                    'kategori_iphone': p['kategori_iphone'],
+                    'bm25_score': s,
+                })
+            recom_json = json.dumps(recom_pool)
 
     context = {
         'validation_message': validation_message,
@@ -151,6 +173,7 @@ def search_view(request):
         'tfidf_total_results': tfidf_total_found if query else 0,
         'tfidf_execution_time': f"{tfidf_execution_time:.4f}",
         'tfidf_max_score': tfidf_results[0][1] if tfidf_results else 0,
+        'recom_json': recom_json if query and not validation_message else '[]',
     }
 
     return render(request, 'recommender/search.html', context)
@@ -401,3 +424,61 @@ def multi_query_evaluation_view(request):
         'num_queries': MULTI_QUERY_COUNT,
     }
     return render(request, 'recommender/multi_query_evaluation.html', context)
+
+
+
+
+
+def wizard_view(request):
+    """
+    Handle the dedicated AI Decision Wizard page.
+    Loads the entire product database and prepares it as a JSON pool.
+    """
+    query = request.GET.get('q', '').strip()
+    products = load_products()
+    recom_pool = []
+    
+    # Optional BM25 scoring if query is passed
+    if query:
+        from .search_engine import calculate_bm25_scores
+        bm25_scored = calculate_bm25_scores(query, products)
+        for p, s in bm25_scored:
+            recom_pool.append({
+                'toko': p['toko'],
+                'platform': p['platform'],
+                'kategori_seri': p['kategori_seri'],
+                'kategori_varian': p['kategori_varian'],
+                'penyimpanan': p['penyimpanan'],
+                'battery_health': p['battery_health'],
+                'battery_val': p.get('battery_val'),
+                'harga': p['harga'],
+                'harga_raw': p['harga_raw'],
+                'pembayaran': p['pembayaran'],
+                'wilayah_toko': p['wilayah_toko'],
+                'kategori_iphone': p['kategori_iphone'],
+                'bm25_score': s,
+            })
+    else:
+        for p in products:
+            recom_pool.append({
+                'toko': p['toko'],
+                'platform': p['platform'],
+                'kategori_seri': p['kategori_seri'],
+                'kategori_varian': p['kategori_varian'],
+                'penyimpanan': p['penyimpanan'],
+                'battery_health': p['battery_health'],
+                'battery_val': p.get('battery_val'),
+                'harga': p['harga'],
+                'harga_raw': p['harga_raw'],
+                'pembayaran': p['pembayaran'],
+                'wilayah_toko': p['wilayah_toko'],
+                'kategori_iphone': p['kategori_iphone'],
+                'bm25_score': 1.0,
+            })
+
+    context = {
+        'recom_json': json.dumps(recom_pool),
+        'total_scanned': len(products),
+        'query': query,
+    }
+    return render(request, 'recommender/wizard.html', context)

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Wizard - iRecom Cashier</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Prevent FOUC: apply theme before render -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('smartirecom-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        :root {
+            --bg-primary: #070913;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #8892a8;
+        }
+        
+        html:not(.dark) {
+            --bg-primary: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .font-mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .bg-mesh {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.12) 0px, transparent 50%);
+        }
+
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Animation utilities */
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* THEME TOGGLE BUTTON                                               */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        .theme-toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            border-radius: 14px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+        }
+        html:not(.dark) .theme-toggle {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+        .theme-toggle:hover {
+            border-color: #6366f1;
+        }
+        .theme-toggle-knob {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6366f1;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+        .dark .theme-toggle-knob {
+            transform: translateX(24px);
+        }
+        html:not(.dark) .theme-toggle-knob {
+            transform: translateX(0px);
+            background: #f59e0b;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
+        .theme-toggle-knob svg {
+            width: 12px;
+            height: 12px;
+            color: white;
+        }
+        
+        /* Monospace lists items custom checkmark styles */
+        .wz-row-active {
+            border-style: solid !important;
+            border-color: #6366f1 !important;
+            background-color: rgba(99, 102, 241, 0.08) !important;
+            padding-left: 20px !important;
+            color: #6366f1 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+        }
+        .wz-row-transition {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .text-themed-primary { color: var(--text-primary) !important; }
+        .text-themed-secondary { color: var(--text-secondary) !important; }
+        .text-themed-muted { color: var(--text-muted) !important; }
+        .bg-themed-primary { background-color: var(--text-primary) !important; }
+        .bg-themed-secondary { background-color: var(--text-secondary) !important; }
+        .bg-themed-muted { background-color: var(--text-muted) !important; }
+        .border-themed-primary { border-color: var(--text-primary) !important; }
+        .border-themed-secondary { border-color: var(--text-secondary) !important; }
+        .border-themed-muted { border-color: var(--text-muted) !important; }
+        .hover\:border-themed-primary:hover { border-color: var(--text-primary) !important; }
+    </style>
+</head>
+<body class="bg-mesh min-h-screen flex flex-col justify-center items-center p-4 sm:p-8 relative overflow-x-hidden antialiased">
+
+    <!-- Top Navigation Header -->
+    <div class="absolute top-4 left-4 sm:top-8 sm:left-8 z-30">
+        <a href="{% url 'recommender:search' %}" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 dark:bg-white/5 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/10 text-themed-secondary text-sm font-bold transition-all shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali ke Beranda
+        </a>
+    </div>
+
+    <!-- Theme Toggle (Top Right) -->
+    <div class="absolute top-4 right-4 sm:top-8 sm:right-8 z-30">
+        <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+            <div class="theme-toggle-knob">
+                <!-- Sun icon (light mode) -->
+                <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20" style="display:none;"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+                <!-- Moon icon (dark mode) -->
+                <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            </div>
+        </button>
+    </div>
+
+    <!-- Widescreen Cashier Receipt Container -->
+    <div id="wizard-box" class="relative w-full max-w-4xl bg-white dark:bg-[#0c0e1a] rounded-xl shadow-2xl p-5 sm:p-8 border border-gray-200 dark:border-gray-800 flex flex-col justify-between h-auto max-h-[85vh] overflow-hidden transition-all duration-300 transform scale-100 z-10">
+        <!-- Receipt Header (Double border layout) -->
+        <div class="text-center mb-4 border-b-4 border-double border-gray-300 dark:border-gray-850 pb-4">
+            <h2 class="text-2xl font-black tracking-widest text-themed-primary font-mono">iRecom Flash Card</h2>
+            <p class="text-[10px] text-themed-muted tracking-widest uppercase mt-1 font-mono">Kartu Pengambilan Keputusan Pintar</p>
+            <div class="flex justify-between items-center text-[11px] text-themed-muted uppercase font-mono mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-900">
+                <span id="wz-badge">0 Kandidat</span>
+                <span id="wz-step-num">Langkah 0/0</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar (Subtle Receipt Line) -->
+        <div class="w-full bg-gray-100 dark:bg-gray-900 h-0.5 mb-4">
+            <div id="wz-progress" class="h-full bg-themed-primary transition-all duration-500" style="width: 0%;"></div>
+        </div>
+
+        <!-- Receipt Content (Scrollable, Monospace style) -->
+        <div class="space-y-4 text-xs md:text-sm text-themed-secondary font-mono overflow-y-auto max-h-[calc(85vh-230px)] flex-1 pr-1" id="wz-content">
+            <!-- Steps injected via JS -->
+        </div>
+
+        <!-- Static Footer Action Buttons (Outside scroll area) -->
+        <div id="wz-footer" class="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center select-none">
+            <!-- Injected dynamically via JS depending on state -->
+        </div>
+        
+    </div>
+
+    <!-- AI WIZARD MODAL LOGIC -->
+    <script>
+        let pool = [];
+        const rawJson = '{{ recom_json|escapejs }}';
+        if (rawJson && rawJson !== '[]') {
+            try { 
+                pool = JSON.parse(rawJson); 
+            } catch(e) { 
+                console.error("JSON parse error:", e); 
+            }
+        }
+        
+        let initialPool = [...pool];
+        let cur = 0;
+        let answers = []; // Stores answers to print in the bill real-time
+        let poolHistory = []; // For backward navigation
+        let answersHistory = []; // For backward navigation
+        let selectedOptIdx = null; // Currently chosen option in current step
+
+        const formatRp = (n) => 'Rp ' + n.toLocaleString('id-ID');
+
+        function formatSeriesList(pList, suffix = "") {
+            const series = [...new Set(pList.map(p => p.kategori_seri.replace(" Series", "").replace("iPhone ", "")))].sort();
+            if (series.length === 3) {
+                return "iPhone 11 / 12 / 13" + (suffix ? " " + suffix : "");
+            }
+            return series.map(s => "iPhone " + s + (suffix ? " " + suffix : "")).join(" / ");
+        }
+
+        function openWizard() {
+            pool = [...initialPool];
+            cur = 0;
+            answers = [];
+            poolHistory = [];
+            answersHistory = [];
+            renderStep();
+        }
+
+        const cfg = [
+            {
+                name: "SERI",
+                q: "PILIH SERI / GENERASI IPHONE:",
+                opts: [
+                    { label: "iPhone 13 Series", fn: p => p.kategori_seri === "iPhone 13 Series" },
+                    { label: "iPhone 12 Series", fn: p => p.kategori_seri === "iPhone 12 Series" },
+                    { label: "iPhone 11 Series", fn: p => p.kategori_seri === "iPhone 11 Series" },
+                    { label: "Semua Seri iPhone (11/12/13)", fn: p => true }
+                ]
+            },
+            {
+                name: "VARIAN",
+                q: "PILIH VARIAN MODEL IPHONE:",
+                opts: [
+                    { label: (pList) => "Varian Reguler (" + formatSeriesList(pList, "") + ")", fn: p => p.kategori_varian && !p.kategori_varian.toLowerCase().includes("pro") && !p.kategori_varian.toLowerCase().includes("max") && !p.kategori_varian.toLowerCase().includes("mini") },
+                    { label: (pList) => "Varian Pro (" + formatSeriesList(pList, "Pro") + ")", fn: p => p.kategori_varian && p.kategori_varian.toLowerCase().includes("pro") && !p.kategori_varian.toLowerCase().includes("max") },
+                    { label: (pList) => "Varian Pro Max (" + formatSeriesList(pList, "Pro Max") + ")", fn: p => p.kategori_varian && p.kategori_varian.toLowerCase().includes("max") },
+                    { label: (pList) => "Varian Mini (" + formatSeriesList(pList, "Mini") + ")", fn: p => p.kategori_varian && p.kategori_varian.toLowerCase().includes("mini") }
+                ]
+            },
+            {
+                name: "BUDGET",
+                q: "TENTUKAN BATAS ANGGARAN MAKSIMAL:",
+                opts: [
+                    { label: "Di bawah Rp 4 Juta", fn: p => p.harga_raw <= 4000000 },
+                    { label: "Rp 4 Juta - Rp 8 Juta", fn: p => p.harga_raw > 4000000 && p.harga_raw <= 8000000 },
+                    { label: "Di atas Rp 8 Juta", fn: p => p.harga_raw > 8000000 },
+                    { label: "Bebas / Tanpa Batas", fn: p => true }
+                ]
+            },
+            {
+                name: "STORAGE",
+                q: "MEMORI PENYIMPANAN MINIMUM:",
+                opts: [
+                    { label: "64GB Cukup", fn: p => (parseInt(p.penyimpanan)||0) <= 64 },
+                    { label: "Minimal 128GB", fn: p => (parseInt(p.penyimpanan)||0) === 128 },
+                    { label: "Minimal 256GB ke atas", fn: p => (parseInt(p.penyimpanan)||0) >= 256 }
+                ]
+            },
+            {
+                name: "BATERAI",
+                q: "KONDISI KESEHATAN BATERAI:",
+                opts: [
+                    { label: "Prima (≥ 90%)", fn: p => (p.battery_health ? parseInt(p.battery_health) : (p.battery_val ? parseInt(p.battery_val) : 100)) >= 90 },
+                    { label: "Sehat (≥ 80%)", fn: p => (p.battery_health ? parseInt(p.battery_health) : (p.battery_val ? parseInt(p.battery_val) : 100)) >= 80 },
+                    { label: "Bebas / Apa saja", fn: p => true }
+                ]
+            },
+            {
+                name: "GARANSI",
+                q: "PILIH KATEGORI GARANSI:",
+                opts: [
+                    { label: "Resmi Indonesia (iBox/Digimap)", fn: p => p.kategori_iphone && p.kategori_iphone.includes("Resmi") },
+                    { label: "Garansi Internasional", fn: p => p.kategori_iphone && p.kategori_iphone.includes("Inter") },
+                    { label: "Bebas / Kategori Apa Saja", fn: p => true }
+                ]
+            },
+            {
+                name: "LOKASI",
+                q: "LOKASI WILAYAH PENJUAL:",
+                opts: [
+                    { label: "Wilayah JABODETABEK", fn: p => p.wilayah_toko && (p.wilayah_toko.toLowerCase().includes("jakarta") || p.wilayah_toko.toLowerCase().includes("bogor") || p.wilayah_toko.toLowerCase().includes("depok") || p.wilayah_toko.toLowerCase().includes("tangerang") || p.wilayah_toko.toLowerCase().includes("bekasi")) },
+                    { label: "Luar JABODETABEK", fn: p => p.wilayah_toko && !(p.wilayah_toko.toLowerCase().includes("jakarta") || p.wilayah_toko.toLowerCase().includes("bogor") || p.wilayah_toko.toLowerCase().includes("depok") || p.wilayah_toko.toLowerCase().includes("tangerang") || p.wilayah_toko.toLowerCase().includes("bekasi")) },
+                    { label: "Bebas Dari Mana Saja", fn: p => true }
+                ]
+            }
+        ];
+
+        function renderStep() {
+            const content = document.getElementById('wz-content');
+            const progress = document.getElementById('wz-progress');
+            const badge = document.getElementById('wz-badge');
+            const stepNum = document.getElementById('wz-step-num');
+            
+            selectedOptIdx = null;
+            progress.style.width = ((cur / cfg.length) * 100) + '%';
+            badge.innerText = pool.length + ' Kandidat';
+            stepNum.innerText = 'Langkah ' + (cur+1) + '/' + cfg.length;
+
+            if (cur >= cfg.length || pool.length <= 3) {
+                showFinalRecommendations();
+                return;
+            }
+
+            const step = cfg[cur];
+            
+            // Generate interactive metadata for question labels dynamically based on remaining pool
+            let qText = step.q;
+            if (pool.length > 0) {
+                if (step.name === "BUDGET") {
+                    const prices = pool.map(p => p.harga_raw);
+                    const minPrice = Math.min(...prices);
+                    const maxPrice = Math.max(...prices);
+                    qText += ' (Rentang: ' + formatRp(minPrice) + ' - ' + formatRp(maxPrice) + ')';
+                } else if (step.name === "STORAGE") {
+                    const storages = [...new Set(pool.map(p => parseInt(p.penyimpanan)))].sort((a,b)=>a-b);
+                    qText += ' (Tersedia: ' + storages.map(s => s + 'GB').join(', ') + ')';
+                } else if (step.name === "BATERAI") {
+                    const bhs = pool.map(p => p.battery_health ? parseInt(p.battery_health) : (p.battery_val ? parseInt(p.battery_val) : 100));
+                    const minBh = Math.min(...bhs);
+                    const maxBh = Math.max(...bhs);
+                    qText += ' (Rentang BH: ' + minBh + '% - ' + maxBh + '%)';
+                } else if (step.name === "GARANSI") {
+                    const warranties = [...new Set(pool.map(p => p.kategori_iphone.replace('Garansi ', '')))];
+                    qText += ' (Tipe garansi: ' + warranties.join(', ') + ')';
+                } else if (step.name === "LOKASI") {
+                    const cities = [...new Set(pool.map(p => p.wilayah_toko))];
+                    qText += ' (Tersedia di ' + cities.length + ' wilayah)';
+                }
+            }
+            
+            let validOpts = [];
+            for (let j = 0; j < step.opts.length; j++) {
+                const opt = step.opts[j];
+                const count = pool.filter(opt.fn).length;
+                if (count > 0) validOpts.push({ opt: opt, idx: j, count: count });
+            }
+
+            if (validOpts.length === 0 || validOpts.length === 1) {
+                cur++;
+                renderStep();
+                return;
+            }
+
+            let html = '<div class="grid grid-cols-1 md:grid-cols-12 gap-6 animate-fade-in text-themed-secondary font-mono">';
+            
+            // Left Column: Selected Criteria Billing Items (col-span-4) - larger text
+            html += '<div class="md:col-span-4 border-r-0 md:border-r-2 border-dashed border-gray-200 dark:border-gray-800 pr-0 md:pr-6 pb-4 md:pb-0 space-y-3">';
+            html += '<div class="text-xs text-themed-muted space-y-1.5">';
+            html += '<div class="flex justify-between font-bold text-themed-primary mb-2 border-b border-dotted border-gray-200 dark:border-gray-800 pb-1.5 text-sm"><span>KRITERIA PILIHAN</span><span>STATUS</span></div>';
+            
+            if (answers.length > 0) {
+                for (let ans of answers) {
+                    html += '<div class="flex justify-between"><span>' + ans.name + ': ' + ans.value + '</span><span class="text-green-500 font-bold">OK</span></div>';
+                }
+            } else {
+                html += '<div class="text-center py-6 text-themed-muted italic font-mono">Belum ada pilihan</div>';
+            }
+            html += '</div></div>';
+
+            // Right Column: Question Card (col-span-8) - larger options text
+            html += '<div class="md:col-span-8 space-y-4">';
+            html += '<p class="text-themed-muted uppercase tracking-wider text-sm border-b border-dashed border-gray-200 dark:border-gray-800 pb-2 font-bold">' + qText + '</p>';
+            html += '<div class="flex flex-col select-none">';
+            
+            for (let v of validOpts) {
+                const labelText = typeof v.opt.label === 'function' ? v.opt.label(pool) : v.opt.label;
+                html += '<div id="wz-row-' + v.idx + '" class="w-full text-left py-3 px-4 border border-dashed border-gray-200 dark:border-gray-800 rounded-lg flex justify-between items-center group cursor-pointer wz-row-transition mb-2.5" onclick="toggleSelect(' + v.idx + ')">';
+                html += '<span class="font-bold text-themed-secondary group-hover:text-themed-primary transition text-sm md:text-base">' + labelText + '</span>';
+                html += '<span class="text-xs md:text-sm text-themed-muted group-hover:text-indigo-400 transition font-mono">' + v.count + ' items</span>';
+                html += '</div>';
+            }
+            
+            html += '</div></div>';
+            html += '</div>';
+            content.innerHTML = html;
+
+            // Render buttons into the static footer instead
+            let footerHtml = '';
+            footerHtml += '<button id="btn-wz-prev" onclick="goBack()" class="px-4 py-2 border border-gray-300 dark:border-gray-700 hover:border-themed-primary text-xs uppercase font-bold transition flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none" ' + (cur === 0 ? 'disabled' : '') + '>';
+            footerHtml += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>';
+            footerHtml += 'Kembali</button>';
+            footerHtml += '<button id="btn-wz-next" onclick="goNext()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs uppercase font-bold transition flex items-center gap-1.5 disabled:opacity-40 disabled:pointer-events-none shadow-md shadow-indigo-500/10" disabled>';
+            footerHtml += 'Lanjutkan';
+            footerHtml += '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+            footerHtml += '</button>';
+            
+            document.getElementById('wz-footer').innerHTML = footerHtml;
+        }
+
+        function toggleSelect(optIdx) {
+            const step = cfg[cur];
+            
+            // Reset all option rows
+            for (let i = 0; i < step.opts.length; i++) {
+                const row = document.getElementById('wz-row-' + i);
+                if (row) {
+                    row.classList.remove('wz-row-active');
+                }
+            }
+
+            // Set active selected row
+            const activeRow = document.getElementById('wz-row-' + optIdx);
+            if (activeRow) {
+                activeRow.classList.add('wz-row-active');
+            }
+
+            selectedOptIdx = optIdx;
+            
+            // Enable next button
+            const nextBtn = document.getElementById('btn-wz-next');
+            if (nextBtn) {
+                nextBtn.removeAttribute('disabled');
+            }
+        }
+
+        function goNext() {
+            if (selectedOptIdx === null) return;
+            const step = cfg[cur];
+            const opt = step.opts[selectedOptIdx];
+            
+            // Save state history for Back button
+            poolHistory.push([...pool]);
+            answersHistory.push([...answers]);
+            
+            const labelText = typeof opt.label === 'function' ? opt.label(pool) : opt.label;
+            pool = pool.filter(opt.fn);
+            answers.push({ name: step.name, value: labelText });
+            cur++;
+            renderStep();
+        }
+
+        function goBack() {
+            if (cur === 0 || poolHistory.length === 0) return;
+            
+            pool = poolHistory.pop();
+            answers = answersHistory.pop();
+            cur--;
+            renderStep();
+        }
+
+        function generateBarcode() {
+            let html = '<div class="flex justify-center items-stretch h-8 gap-[1px] opacity-40 dark:opacity-60 my-4">';
+            const pattern = [2, 1, 3, 1, 4, 1, 2, 3, 1, 2, 4, 1, 1, 3, 2, 1, 4, 2, 1, 3];
+            for (let w of pattern) {
+                html += '<div class="bg-current" style="width: ' + w + 'px;"></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function showFinalRecommendations() {
+            const content = document.getElementById('wz-content');
+            const progress = document.getElementById('wz-progress');
+            const badge = document.getElementById('wz-badge');
+            const stepNum = document.getElementById('wz-step-num');
+            
+            progress.style.width = '100%';
+            badge.innerText = pool.length + ' Hasil';
+            stepNum.innerText = 'SELESAI';
+            
+            pool.sort((a,b) => b.bm25_score - a.bm25_score);
+            const finals = pool.slice(0, 3);
+            
+            let html = '<div class="grid grid-cols-1 md:grid-cols-12 gap-6 animate-fade-in text-themed-secondary font-mono">';
+            
+            // Left Column: Selections, Barcode, Meta (col-span-4) - larger text
+            html += '<div class="md:col-span-4 border-r-0 md:border-r-2 border-dashed border-gray-300 dark:border-gray-700 pr-0 md:pr-6 pb-4 md:pb-0 flex flex-col justify-between">';
+            html += '<div>';
+            html += '<div class="text-xs text-themed-muted space-y-2.5 mb-4">';
+            html += '<div class="flex justify-between font-bold text-themed-primary mb-1 border-b border-dotted border-gray-200 dark:border-gray-800 pb-1.5 text-sm"><span>KRITERIA</span></div>';
+            for (let ans of answers) {
+                html += '<div class="border-b border-dotted border-gray-100 dark:border-gray-900/50 pb-1.5"><div class="uppercase tracking-wide text-[10px] text-themed-muted">' + ans.name + '</div><div class="text-themed-primary font-bold text-xs mt-0.5 break-words leading-snug">' + ans.value + '</div></div>';
+            }
+            html += '</div>';
+            html += '<div class="text-center py-2.5 border-t border-b border-dashed border-gray-300 dark:border-gray-700">';
+            html += '<p class="font-black text-base tracking-widest text-themed-primary">KARTU KEPUTUSAN</p>';
+            html += '<p class="text-xs text-themed-muted uppercase mt-1">Ditemukan ' + pool.length + ' produk cocok</p>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div>';
+            html += generateBarcode();
+            html += '<div class="text-center text-[10px] text-themed-muted tracking-wider uppercase space-y-1">';
+            html += '<div>CASHER ID: ' + Math.random().toString(36).substring(3, 9).toUpperCase() + '</div>';
+            html += '<div>TIME: ' + new Date().toISOString().slice(0, 19).replace('T', ' ') + '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>'; // End Left Column
+
+            // Right Column: Recommendations cards side-by-side (col-span-8) - larger match cards text
+            html += '<div class="md:col-span-8 flex flex-col justify-between pl-0 md:pl-2">';
+            html += '<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">';
+            
+            for (let i = 0; i < finals.length; i++) {
+                const p = finals[i];
+                const isBest = i === 0;
+                const bestLabel = isBest ? ' [REKOMENDASI #1]' : ' [KANDIDAT #' + (i+1) + ']';
+                const bestColor = isBest ? 'text-yellow-500' : 'text-themed-primary';
+                
+                let bh = p.battery_health ? p.battery_health + '%' : (p.battery_val ? '~' + p.battery_val + '%' : 'N/A');
+                let scoreText = p.bm25_score ? p.bm25_score.toFixed(4) : "1.0000";
+                
+                html += '<div class="p-4 border border-dashed border-gray-200 dark:border-gray-800 rounded-lg flex flex-col justify-between space-y-4 bg-gray-50/50 dark:bg-gray-900/30">';
+                html += '<div>';
+                html += '<div class="font-bold text-xs ' + bestColor + ' border-b border-dotted border-gray-200 dark:border-gray-800 pb-2 mb-2 text-center">' + bestLabel + '</div>';
+                html += '<div class="font-black text-themed-primary text-sm text-center break-words leading-snug" title="' + p.kategori_varian + '">' + p.kategori_varian + '</div>';
+                html += '<div class="text-xs text-themed-secondary mt-3 space-y-1.5">';
+                html += '<div class="flex justify-between gap-2"><span class="shrink-0">STORAGE</span><span class="font-bold text-themed-primary text-right break-words">' + p.penyimpanan + '</span></div>';
+                html += '<div class="flex justify-between gap-2"><span class="shrink-0">BATTERY</span><span class="font-bold text-themed-primary text-right break-words">' + bh + '</span></div>';
+                html += '<div class="flex justify-between gap-2"><span class="shrink-0">GARANSI</span><span class="font-bold text-themed-primary text-right break-words">' + p.kategori_iphone.replace('Garansi ','') + '</span></div>';
+                html += '<div class="flex justify-between gap-2"><span class="shrink-0">PLATFORM</span><span class="font-bold text-themed-primary text-right break-words">' + p.platform + '</span></div>';
+                html += '<div class="flex justify-between gap-2"><span class="shrink-0">LOKASI</span><span class="font-bold text-themed-primary text-right break-words">' + p.wilayah_toko + '</span></div>';
+                html += '<div class="flex justify-between font-bold text-themed-primary mt-1.5 pt-1.5 border-t border-dotted border-gray-100 dark:border-gray-900"><span>SCORE</span><span>' + scoreText + '</span></div>';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '<div class="space-y-2.5">';
+                html += '<div class="text-center text-sm md:text-base font-black text-indigo-600 dark:text-indigo-400">' + formatRp(p.harga_raw) + '</div>';
+                html += '<a href="/?q=' + encodeURIComponent(p.kategori_varian + ' ' + p.penyimpanan) + '" class="block text-center py-1.5 bg-themed-primary/10 hover:bg-themed-primary/20 text-themed-primary text-xs rounded transition uppercase tracking-wider font-bold">Cari</a>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>'; // End Grid of 3
+            html += '</div>'; // End Right Column
+            html += '</div>'; // End Main Grid
+            content.innerHTML = html;
+
+            // Render final buttons into static footer
+            let footerHtml = '';
+            footerHtml += '<button onclick="openWizard()" class="px-4 py-2 border border-gray-300 dark:border-gray-700 hover:border-themed-primary text-xs uppercase font-bold transition">Ulangi</button>';
+            footerHtml += '<a href="{% url 'recommender:search' %}" class="px-4 py-2 bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 text-xs uppercase font-bold transition rounded flex items-center justify-center">Tutup & Keluar</a>';
+            
+            document.getElementById('wz-footer').innerHTML = footerHtml;
+        }
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelector('.sun-icon').style.display = isDark ? 'none' : 'block';
+            document.querySelector('.moon-icon').style.display = isDark ? 'block' : 'none';
+        }
+
+        // Initialize Wizard immediately on page load
+        window.addEventListener('load', function() {
+            openWizard();
+            updateThemeIcons();
+            
+            // Theme toggle logic
+            const themeBtn = document.getElementById('theme-toggle');
+            themeBtn.addEventListener('click', function() {
+                const doc = document.documentElement;
+                if (doc.classList.contains('dark')) {
+                    doc.classList.remove('dark');
+                    localStorage.setItem('smartirecom-theme', 'light');
+                } else {
+                    doc.classList.add('dark');
+                    localStorage.setItem('smartirecom-theme', 'dark');
+                }
+                updateThemeIcons();
+            });
+        });
+    </script>
+</body>
+</html>
