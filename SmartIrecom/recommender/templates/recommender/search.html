@@ -922,7 +922,7 @@
                             <p class="text-[10px] text-themed-muted mt-0.5">{{ tfidf_total_results }} hasil · {{ tfidf_execution_time }}s</p>
                         </div>
                     </div>
-                    {% for product, score in tfidf_results|slice:":10" %}
+                    {% for product, score in tfidf_results|slice:":15" %}
                     <div class="compare-row">
                         <span class="compare-rank">{{ forloop.counter }}</span>
                         <div class="flex-1 min-w-0">
