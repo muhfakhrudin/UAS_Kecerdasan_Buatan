@@ -1,0 +1,246 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluasi Resmi: BM25 vs TF-IDF — iRecom Master</title>
+    <meta name="description" content="Hasil evaluasi kuantitatif resmi Okapi BM25 vs TF-IDF + Cosine Similarity atas 14 query berlabel, dipakai sebagai acuan Tabel II paper.">
+
+    <link rel="stylesheet" href="{% static 'recommender/css/tailwind.css' %}">
+    <link rel="stylesheet" href="{% static 'recommender/css/fonts.css' %}">
+
+    <script>
+        (function() {
+            const saved = localStorage.getItem('smartirecom-theme');
+            if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+
+        :root {
+            --bg-primary: #0c0e1a;
+            --bg-secondary: #111427;
+            --bg-tertiary: #171b30;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
+            --border-primary: rgba(255,255,255,0.06);
+            --border-hover: rgba(99, 102, 241, 0.45);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #8892a8;
+            --accent-primary: #818cf8;
+            --accent-secondary: #2dd4bf;
+            --accent-tertiary: #fbbf24;
+            --accent-primary-bg: rgba(99, 102, 241, 0.12);
+            --accent-secondary-bg: rgba(45, 212, 191, 0.12);
+            --mesh-1: rgba(99, 102, 241, 0.07);
+            --mesh-2: rgba(45, 212, 191, 0.05);
+            --row-hover: rgba(255,255,255,0.03);
+            --table-border: rgba(255,255,255,0.07);
+            --winner-bg: rgba(45, 212, 191, 0.08);
+        }
+        html:not(.dark) {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+            --border-primary: rgba(0,0,0,0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;
+            --accent-secondary: #14b8a6;
+            --accent-tertiary: #f59e0b;
+            --accent-primary-bg: rgba(99, 102, 241, 0.08);
+            --accent-secondary-bg: rgba(20, 184, 166, 0.08);
+            --mesh-1: rgba(99, 102, 241, 0.06);
+            --mesh-2: rgba(20, 184, 166, 0.04);
+            --row-hover: rgba(0,0,0,0.02);
+            --table-border: rgba(0,0,0,0.08);
+            --winner-bg: rgba(20, 184, 166, 0.06);
+        }
+
+        body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; transition: background 0.4s ease, color 0.4s ease; }
+        .bg-mesh {
+            background:
+                radial-gradient(ellipse at 20% 0%, var(--mesh-1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, var(--mesh-2) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+        .card-glass { background: var(--bg-card); border: 1px solid var(--border-primary); backdrop-filter: blur(10px); border-radius: 1rem; }
+        .text-themed-primary { color: var(--text-primary); }
+        .text-themed-secondary { color: var(--text-secondary); }
+        .text-themed-muted { color: var(--text-muted); }
+        .text-accent-primary { color: var(--accent-primary); }
+        .text-accent-secondary { color: var(--accent-secondary); }
+
+        .eval-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .eval-table th, .eval-table td { padding: 0.6rem 0.9rem; text-align: left; border-bottom: 1px solid var(--table-border); }
+        .eval-table th { text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .eval-table tbody tr:hover { background: var(--row-hover); }
+        .eval-table td.num, .eval-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .row-winner { background: var(--winner-bg); }
+
+        .theme-toggle {
+            position: relative; width: 52px; height: 28px; border-radius: 14px;
+            border: 1.5px solid var(--border-primary); background: var(--bg-tertiary);
+            cursor: pointer; display: flex; align-items: center; padding: 0 3px;
+        }
+        .theme-toggle-knob {
+            width: 20px; height: 20px; border-radius: 50%; background: var(--accent-primary);
+            transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .dark .theme-toggle-knob { transform: translateX(24px); }
+        html:not(.dark) .theme-toggle-knob { transform: translateX(0px); background: #f59e0b; }
+        .theme-toggle-knob svg { width: 12px; height: 12px; color: white; }
+
+        .badge-method {
+            display: inline-flex; align-items: center; font-weight: 600; font-size: 0.72rem;
+            padding: 0.15rem 0.55rem; border-radius: 999px;
+        }
+        .badge-bm25 { background: var(--accent-secondary-bg); color: var(--accent-secondary); }
+        .badge-tfidf { background: var(--accent-primary-bg); color: var(--accent-primary); }
+    </style>
+</head>
+<body class="bg-mesh antialiased">
+
+    <nav class="relative z-30 flex items-center justify-between max-w-6xl mx-auto px-6 pt-5">
+        <a href="{% url 'recommender:compare' %}" class="text-sm text-themed-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali ke Bandingkan BM25 vs TF-IDF
+        </a>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+            <div class="theme-toggle-knob">
+                <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20" style="display:none;"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+                <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            </div>
+        </button>
+    </nav>
+
+    <header class="relative max-w-6xl mx-auto px-6 pt-8 pb-6">
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-2">
+            <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                Evaluasi Resmi: BM25 vs TF-IDF
+            </span>
+        </h1>
+        <p class="text-sm md:text-base text-themed-secondary max-w-3xl">
+            Dihitung langsung (live) setiap halaman ini dimuat — {{ result.num_queries }} kueri uji berlabel atas {{ result.num_products }} produk asli, K={{ result.k }}.
+            Sumber data dan logika sama persis dengan <code class="text-accent-primary">python manage.py run_evaluation</code>, tidak ada angka yang di-cache atau dikarang.
+            Ini adalah acuan resmi untuk Tabel II paper — untuk membandingkan query bebas pilihan sendiri, gunakan <a href="{% url 'recommender:compare' %}" class="text-accent-primary hover:underline">halaman Bandingkan</a>.
+        </p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-16">
+
+        <!-- Summary comparison table -->
+        <div class="card-glass p-5 mb-6 overflow-x-auto">
+            <h2 class="text-lg font-bold text-themed-primary mb-4">Ringkasan (rata-rata {{ result.num_queries }} kueri)</h2>
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th class="num">Precision@10</th>
+                        <th class="num">Recall@10</th>
+                        <th class="num">Hit Rate@10</th>
+                        <th class="num">NDCG@10</th>
+                        <th class="num">Avg. Query Time (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for method, m in result.summary.items %}
+                    <tr class="{% if method == 'Okapi BM25' %}row-winner{% endif %}">
+                        <td class="font-semibold text-themed-primary">
+                            {% if method == 'Okapi BM25' %}
+                            <span class="badge-method badge-bm25">{{ method }}</span>
+                            {% else %}
+                            <span class="badge-method badge-tfidf">{{ method }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ m.precision_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.recall_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.hit_rate_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.ndcg_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.avg_query_time_ms|floatformat:3 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Per-query breakdown -->
+        <div class="card-glass p-5 mb-6 overflow-x-auto">
+            <h2 class="text-lg font-bold text-themed-primary mb-4">Rincian per Kueri</h2>
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th>Query</th>
+                        <th class="num"># Relevan</th>
+                        <th>Method</th>
+                        <th class="num">Precision@10</th>
+                        <th class="num">Recall@10</th>
+                        <th class="num">Hit Rate@10</th>
+                        <th class="num">NDCG@10</th>
+                        <th class="num">Time (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in result.per_query %}
+                    {% for method, m in q.results.items %}
+                    <tr>
+                        {% if forloop.first %}
+                        <td rowspan="2" class="text-themed-primary font-medium align-top">{{ q.query }}</td>
+                        <td rowspan="2" class="num align-top">{{ q.num_relevant }}</td>
+                        {% endif %}
+                        <td>
+                            {% if method == 'Okapi BM25' %}
+                            <span class="badge-method badge-bm25">{{ method }}</span>
+                            {% else %}
+                            <span class="badge-method badge-tfidf">{{ method }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ m.precision_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.recall_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.hit_rate_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.ndcg_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.query_time_ms|floatformat:3 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Relevance criteria -->
+        <div class="card-glass p-5">
+            <h2 class="text-lg font-bold text-themed-primary mb-2">Kriteria Relevansi (Ground Truth)</h2>
+            <p class="text-sm text-themed-secondary leading-relaxed">{{ result.relevance_criteria }}</p>
+        </div>
+    </main>
+
+    <script>
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelector('.sun-icon').style.display = isDark ? 'none' : 'block';
+            document.querySelector('.moon-icon').style.display = isDark ? 'block' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', updateThemeIcons);
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('smartirecom-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('smartirecom-theme', 'dark');
+            }
+            updateThemeIcons();
+        });
+    </script>
+</body>
+</html>

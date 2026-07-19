@@ -1,0 +1,11 @@
+{
+  "name": "smartirecom-frontend-build",
+  "private": true,
+  "description": "Build-time-only tooling to compile a local Tailwind CSS bundle for the recommender app, so the exhibition build has zero runtime CDN dependency. Not needed to run the Django app itself.",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i static_src/tailwind_input.css -o recommender/static/recommender/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13"
+  }
+}

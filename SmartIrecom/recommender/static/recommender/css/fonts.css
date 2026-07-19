@@ -1,0 +1,10 @@
+/* Self-hosted Inter (latin subset, variable font) — replaces the Google
+   Fonts CDN <link>. Vendored once at build time so the exhibition booth
+   never depends on internet access for the page to look right. */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 300 900;
+    font-display: swap;
+    src: url('../fonts/Inter-Variable-latin.woff2') format('woff2');
+}

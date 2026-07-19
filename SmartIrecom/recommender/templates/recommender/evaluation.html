@@ -1,0 +1,402 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bandingkan BM25 vs TF-IDF — iRecom Master</title>
+    <meta name="description" content="Bandingkan langsung ranking Okapi BM25 vs TF-IDF + Cosine Similarity untuk beberapa query sekaligus, live, pada dataset iPhone bekas iRecom Master.">
+
+    <!-- Locally built Tailwind CSS bundle (no CDN — see package.json/tailwind.config.js) -->
+    <link rel="stylesheet" href="{% static 'recommender/css/tailwind.css' %}">
+    <!-- Self-hosted Inter font (no Google Fonts CDN) -->
+    <link rel="stylesheet" href="{% static 'recommender/css/fonts.css' %}">
+
+    <script>
+        (function() {
+            const saved = localStorage.getItem('smartirecom-theme');
+            if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+
+        :root {
+            --bg-primary: #0c0e1a;
+            --bg-secondary: #111427;
+            --bg-tertiary: #171b30;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
+            --border-primary: rgba(255,255,255,0.06);
+            --border-hover: rgba(99, 102, 241, 0.45);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #8892a8;
+            --accent-primary: #818cf8;
+            --accent-secondary: #2dd4bf;
+            --accent-tertiary: #fbbf24;
+            --accent-primary-bg: rgba(99, 102, 241, 0.12);
+            --accent-secondary-bg: rgba(45, 212, 191, 0.12);
+            --mesh-1: rgba(99, 102, 241, 0.07);
+            --mesh-2: rgba(45, 212, 191, 0.05);
+            --glow-color-dim: rgba(99, 102, 241, 0.25);
+            --row-hover: rgba(255,255,255,0.03);
+            --table-border: rgba(255,255,255,0.07);
+        }
+        html:not(.dark) {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --bg-card: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%);
+            --border-primary: rgba(0,0,0,0.08);
+            --border-hover: rgba(99, 102, 241, 0.4);
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --accent-primary: #6366f1;
+            --accent-secondary: #14b8a6;
+            --accent-tertiary: #f59e0b;
+            --accent-primary-bg: rgba(99, 102, 241, 0.08);
+            --accent-secondary-bg: rgba(20, 184, 166, 0.08);
+            --mesh-1: rgba(99, 102, 241, 0.06);
+            --mesh-2: rgba(20, 184, 166, 0.04);
+            --glow-color-dim: rgba(99, 102, 241, 0.15);
+            --row-hover: rgba(0,0,0,0.02);
+            --table-border: rgba(0,0,0,0.08);
+        }
+
+        body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; transition: background 0.4s ease, color 0.4s ease; }
+        .bg-mesh {
+            background:
+                radial-gradient(ellipse at 20% 0%, var(--mesh-1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, var(--mesh-2) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+        .card-glass { background: var(--bg-card); border: 1px solid var(--border-primary); backdrop-filter: blur(10px); border-radius: 1rem; }
+        .text-themed-primary { color: var(--text-primary); }
+        .text-themed-secondary { color: var(--text-secondary); }
+        .text-themed-muted { color: var(--text-muted); }
+        .text-accent-primary { color: var(--accent-primary); }
+
+        .search-bar-bg { background: var(--bg-secondary); }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45), 0 0 24px var(--glow-color-dim); }
+        .btn-glow { background: linear-gradient(135deg, #6366f1, #4f46e5, #4338ca); box-shadow: 0 0 20px rgba(99, 102, 241, 0.35); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.55); transform: translateY(-2px); }
+        .btn-glow:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .query-row { transition: border-color 0.2s ease; }
+        .query-row:focus-within { border-color: var(--border-hover) !important; }
+        .remove-query-btn { color: var(--text-muted); transition: color 0.2s ease; cursor: pointer; }
+        .remove-query-btn:hover { color: #f87171; }
+
+        .eval-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .eval-table th, .eval-table td { padding: 0.55rem 0.85rem; text-align: left; border-bottom: 1px solid var(--table-border); }
+        .eval-table th { text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .eval-table tbody tr:hover { background: var(--row-hover); }
+        .eval-table td.num, .eval-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .eval-table tbody tr:last-child td { border-bottom: none; }
+
+        .badge-method { display: inline-flex; align-items: center; font-weight: 600; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; }
+        .badge-bm25 { background: var(--accent-secondary-bg); color: var(--accent-secondary); }
+        .badge-tfidf { background: var(--accent-primary-bg); color: var(--accent-primary); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.1rem; border-bottom: 1px solid var(--border-primary); }
+
+        .theme-toggle {
+            position: relative; width: 52px; height: 28px; border-radius: 14px;
+            border: 1.5px solid var(--border-primary); background: var(--bg-tertiary);
+            cursor: pointer; display: flex; align-items: center; padding: 0 3px;
+        }
+        .theme-toggle-knob {
+            width: 20px; height: 20px; border-radius: 50%; background: var(--accent-primary);
+            transition: transform 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .dark .theme-toggle-knob { transform: translateX(24px); }
+        html:not(.dark) .theme-toggle-knob { transform: translateX(0px); background: #f59e0b; }
+        .theme-toggle-knob svg { width: 12px; height: 12px; color: white; }
+    </style>
+</head>
+<body class="bg-mesh antialiased">
+
+    <nav class="relative z-30 flex items-center justify-between max-w-6xl mx-auto px-6 pt-5">
+        <a href="{% url 'recommender:search' %}" class="text-sm text-themed-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Kembali ke Pencarian
+        </a>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+            <div class="theme-toggle-knob">
+                <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20" style="display:none;"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+                <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            </div>
+        </button>
+    </nav>
+
+    <header class="relative max-w-6xl mx-auto px-6 pt-8 pb-6 text-center">
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-3">
+            <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                Bandingkan BM25 vs TF-IDF
+            </span>
+        </h1>
+        <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-3">
+            Tambahkan satu atau beberapa query pilihan sendiri (klik "+ Tambah Query" untuk query lain, maksimal {{ max_queries|default:10 }}) — semuanya dijalankan live lewat Okapi BM25 (metode utama) dan TF-IDF + Cosine Similarity (baseline) sekaligus, atas dataset asli yang sama.
+        </p>
+        <a href="{% url 'recommender:paper_evaluation' %}" class="inline-flex items-center gap-1.5 text-xs text-accent-primary hover:underline mb-6">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Lihat Evaluasi Resmi (14 Query Berlabel, untuk Paper) →
+        </a>
+
+        <form method="GET" action="{% url 'recommender:compare' %}" id="compare-form" class="max-w-2xl mx-auto text-left">
+            <div id="query-inputs" class="space-y-2 mb-3">
+                {% if submitted_queries %}
+                    {% for q in submitted_queries %}
+                    <div class="query-row flex items-center search-bar-bg rounded-xl overflow-hidden" style="border: 1px solid var(--border-primary);">
+                        <input type="text" name="query" value="{{ q }}" placeholder="mis. iPhone 12 Pro Max 256GB Tokopedia" class="search-input flex-1 bg-transparent px-4 py-2.5 text-sm focus:outline-none text-themed-primary" autocomplete="off">
+                        <button type="button" class="remove-query-btn px-3" title="Hapus query">✕</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="query-row flex items-center search-bar-bg rounded-xl overflow-hidden" style="border: 1px solid var(--border-primary);">
+                        <input type="text" name="query" placeholder="mis. iPhone 12 Pro Max 256GB Tokopedia" class="search-input flex-1 bg-transparent px-4 py-2.5 text-sm focus:outline-none text-themed-primary" autocomplete="off">
+                        <button type="button" class="remove-query-btn px-3" title="Hapus query">✕</button>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="button" id="add-query-btn" class="text-xs font-medium text-accent-primary hover:underline flex items-center gap-1 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Query
+                </button>
+                <button type="submit" class="btn-glow text-white font-semibold px-6 py-2 rounded-xl text-sm tracking-wide cursor-pointer">
+                    Bandingkan
+                </button>
+            </div>
+        </form>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-16">
+        {% if query_results %}
+        <p class="text-xs text-themed-muted text-center mb-6">
+            {{ total_scanned }} produk dipindai · {{ num_queries }} query dibandingkan
+            {% if num_with_ground_truth %} · {{ num_with_ground_truth }} dari {{ num_queries }} punya atribut terstruktur terdeteksi (bisa dihitung metriknya){% endif %}
+        </p>
+
+        {% if summary %}
+        <div class="card-glass p-5 mb-10 overflow-x-auto">
+            <h2 class="text-base font-bold text-themed-primary mb-1">Ringkasan (rata-rata {{ num_with_ground_truth }} dari {{ num_queries }} kueri)</h2>
+            <p class="text-[11px] text-themed-muted mb-4">
+                Hanya query yang atribut terstrukturnya berhasil terdeteksi (varian/storage/platform/battery/wilayah) yang dirata-rata di sini — lihat catatan per query di bawah untuk yang tidak terdeteksi.
+            </p>
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th class="num">Precision@10</th>
+                        <th class="num">Recall@10</th>
+                        <th class="num">Hit Rate@10</th>
+                        <th class="num">NDCG@10</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for method, m in summary.items %}
+                    <tr>
+                        <td>
+                            {% if method == 'Okapi BM25' %}
+                            <span class="badge-method badge-bm25">{{ method }}</span>
+                            {% else %}
+                            <span class="badge-method badge-tfidf">{{ method }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ m.precision_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.recall_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.hit_rate_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.ndcg_at_k|floatformat:4 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% for qr in query_results %}
+        <div class="mb-10">
+            <h2 class="text-base font-bold text-themed-primary mb-3">{{ forloop.counter }}. "{{ qr.query }}"</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <!-- BM25 column -->
+                <div class="card-glass overflow-hidden">
+                    <div class="panel-header">
+                        <div>
+                            <span class="badge-method badge-bm25">Okapi BM25 (Metode Utama)</span>
+                        </div>
+                        <span class="text-[11px] text-themed-muted">{{ qr.bm25_results|length }} hasil · {{ qr.bm25_time }}s</span>
+                    </div>
+                    <table class="eval-table">
+                        <thead>
+                            <tr><th style="width:2rem;">#</th><th>Produk</th><th>Platform · Harga</th><th class="num">Skor</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for product, score in qr.bm25_results %}
+                            <tr>
+                                <td class="text-themed-muted">{{ forloop.counter }}</td>
+                                <td class="text-themed-primary font-medium">{{ product.kategori_varian }} · {{ product.penyimpanan }}</td>
+                                <td class="text-themed-secondary">{{ product.platform }} · {{ product.harga }}</td>
+                                <td class="num text-accent-primary font-semibold">{{ score }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-themed-muted">Tidak ada hasil.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TF-IDF column -->
+                <div class="card-glass overflow-hidden">
+                    <div class="panel-header">
+                        <div>
+                            <span class="badge-method badge-tfidf">TF-IDF + Cosine (Baseline)</span>
+                        </div>
+                        <span class="text-[11px] text-themed-muted">{{ qr.tfidf_results|length }} hasil · {{ qr.tfidf_time }}s</span>
+                    </div>
+                    <table class="eval-table">
+                        <thead>
+                            <tr><th style="width:2rem;">#</th><th>Produk</th><th>Platform · Harga</th><th class="num">Skor</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for product, score in qr.tfidf_results %}
+                            <tr>
+                                <td class="text-themed-muted">{{ forloop.counter }}</td>
+                                <td class="text-themed-primary font-medium">{{ product.kategori_varian }} · {{ product.penyimpanan }}</td>
+                                <td class="text-themed-secondary">{{ product.platform }} · {{ product.harga }}</td>
+                                <td class="num text-accent-primary font-semibold">{{ score }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-themed-muted">Tidak ada hasil.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if qr.metrics %}
+            <div class="card-glass overflow-hidden mt-3">
+                <div class="panel-header">
+                    <p class="text-xs text-themed-secondary">
+                        Atribut terdeteksi: <span class="text-themed-primary font-medium">{{ qr.metrics.constraints_display }}</span> · {{ qr.metrics.num_relevant }} dokumen relevan
+                    </p>
+                </div>
+                <table class="eval-table">
+                    <thead>
+                        <tr><th>Method</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for method, m in qr.metrics.methods.items %}
+                        <tr>
+                            <td>
+                                {% if method == 'Okapi BM25' %}
+                                <span class="badge-method badge-bm25">{{ method }}</span>
+                                {% else %}
+                                <span class="badge-method badge-tfidf">{{ method }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="num">{{ m.precision_at_k|floatformat:4 }}</td>
+                            <td class="num">{{ m.recall_at_k|floatformat:4 }}</td>
+                            <td class="num">{{ m.hit_rate_at_k|floatformat:4 }}</td>
+                            <td class="num">{{ m.ndcg_at_k|floatformat:4 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-[11px] text-themed-muted mt-3 px-1">
+                ⚠ Tidak ada atribut terstruktur (varian/storage/platform/battery/wilayah) yang terdeteksi pada query ini — Precision/Recall/Hit Rate/NDCG tidak dapat dihitung (bukan 0, memang tidak terdefinisi tanpa ground truth).
+            </p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <p class="text-xs text-themed-muted text-center mt-4 max-w-2xl mx-auto">
+            Precision/Recall/Hit Rate/NDCG di atas dihitung dari ground truth yang di-deteksi otomatis dari teks query (varian/storage/platform/battery/wilayah yang cocok dengan data asli) — metodologinya sama persis dengan 14 query resmi, hanya constraint-nya di-parse otomatis alih-alih ditulis manual. Query tanpa atribut terstruktur yang terdeteksi tidak dapat dihitung metriknya. Angka resmi untuk paper (14 query kurasi manual) tetap di <a href="{% url 'recommender:paper_evaluation' %}" class="text-accent-primary hover:underline">halaman Evaluasi Resmi</a>.
+        </p>
+
+        {% else %}
+        <div class="text-center py-16">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
+                <svg class="w-8 h-8" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <p class="text-themed-secondary">Isi satu atau beberapa query di atas untuk melihat perbandingan ranking live.</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        const MAX_QUERIES = {{ max_queries|default:10 }};
+
+        function makeQueryRow(value) {
+            const row = document.createElement('div');
+            row.className = 'query-row flex items-center search-bar-bg rounded-xl overflow-hidden';
+            row.style.border = '1px solid var(--border-primary)';
+            row.innerHTML = `
+                <input type="text" name="query" value="${value ? value.replace(/"/g, '&quot;') : ''}" placeholder="mis. iPhone 12 Pro Max 256GB Tokopedia" class="search-input flex-1 bg-transparent px-4 py-2.5 text-sm focus:outline-none text-themed-primary" autocomplete="off">
+                <button type="button" class="remove-query-btn px-3" title="Hapus query">✕</button>
+            `;
+            return row;
+        }
+
+        function updateAddButtonState() {
+            const container = document.getElementById('query-inputs');
+            const addBtn = document.getElementById('add-query-btn');
+            const count = container.querySelectorAll('.query-row').length;
+            addBtn.disabled = count >= MAX_QUERIES;
+            addBtn.style.opacity = count >= MAX_QUERIES ? '0.4' : '1';
+            addBtn.style.pointerEvents = count >= MAX_QUERIES ? 'none' : 'auto';
+        }
+
+        document.getElementById('add-query-btn').addEventListener('click', function() {
+            const container = document.getElementById('query-inputs');
+            if (container.querySelectorAll('.query-row').length >= MAX_QUERIES) return;
+            const row = makeQueryRow('');
+            container.appendChild(row);
+            row.querySelector('input').focus();
+            updateAddButtonState();
+        });
+
+        document.getElementById('query-inputs').addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.remove-query-btn');
+            if (!removeBtn) return;
+            const container = document.getElementById('query-inputs');
+            if (container.querySelectorAll('.query-row').length > 1) {
+                removeBtn.closest('.query-row').remove();
+            } else {
+                removeBtn.closest('.query-row').querySelector('input').value = '';
+            }
+            updateAddButtonState();
+        });
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelector('.sun-icon').style.display = isDark ? 'none' : 'block';
+            document.querySelector('.moon-icon').style.display = isDark ? 'block' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateThemeIcons();
+            updateAddButtonState();
+            const firstInput = document.querySelector('#query-inputs input');
+            if (firstInput && !firstInput.value) { firstInput.focus(); }
+        });
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('smartirecom-theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('smartirecom-theme', 'dark');
+            }
+            updateThemeIcons();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+  "relevance_criteria": "A product is relevant to a query iff it satisfies ALL explicit constraints listed for that query (AND semantics), matched against the raw product attributes from dataset_iphone.csv (kategori_varian, penyimpanan, platform, wilayah_toko substring, kategori_iphone, battery_val >= threshold). Derived deterministically from the real, currently-loaded dataset — no relevance judgment is hand-typed.",
+  "num_queries": 14,
+  "k": 10,
+  "queries": [
+    {
+      "query": "iPhone 11 64GB",
+      "num_relevant": 27
+    },
+    {
+      "query": "iPhone 11 Pro Max 256GB",
+      "num_relevant": 9
+    },
+    {
+      "query": "iPhone 12 128GB Shopee",
+      "num_relevant": 8
+    },
+    {
+      "query": "iPhone 12 Pro Max 256GB Tokopedia",
+      "num_relevant": 5
+    },
+    {
+      "query": "iPhone 13 Pro battery diatas 90",
+      "num_relevant": 24
+    },
+    {
+      "query": "iPhone 13 256GB",
+      "num_relevant": 3
+    },
+    {
+      "query": "iPhone 12 Mini 128GB",
+      "num_relevant": 9
+    },
+    {
+      "query": "iPhone 13 Pro Max 512GB",
+      "num_relevant": 2
+    },
+    {
+      "query": "iPhone 11 Pro 256GB Jakarta",
+      "num_relevant": 3
+    },
+    {
+      "query": "iPhone 13 Mini 128GB Shopee",
+      "num_relevant": 8
+    },
+    {
+      "query": "iPhone 12 Pro 128GB Resmi",
+      "num_relevant": 41
+    },
+    {
+      "query": "iPhone 11 128GB Tokopedia",
+      "num_relevant": 4
+    },
+    {
+      "query": "iPhone 13 128GB battery 90 Shopee",
+      "num_relevant": 50
+    },
+    {
+      "query": "iPhone 12 256GB Bandung",
+      "num_relevant": 3
+    }
+  ]
+}

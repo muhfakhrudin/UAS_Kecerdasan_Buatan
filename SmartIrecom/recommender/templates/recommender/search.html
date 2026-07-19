@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="id" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
@@ -6,49 +6,10 @@
     <title>Smart IRecom — AI iPhone Recommender</title>
     <meta name="description" content="Smart IRecom uses Okapi BM25 AI algorithm to find the perfect second-hand iPhone for you from hundreds of verified listings.">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'display': ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    animation: {
-                        'glow-pulse': 'glow-pulse 2s ease-in-out infinite alternate',
-                        'float': 'float 6s ease-in-out infinite',
-                        'slide-up': 'slide-up 0.5s ease-out',
-                        'fade-in': 'fade-in 0.6s ease-out',
-                        'shimmer': 'shimmer 2s linear infinite',
-                    },
-                    keyframes: {
-                        'glow-pulse': {
-                            '0%': { boxShadow: '0 0 20px var(--glow-color-dim)' },
-                            '100%': { boxShadow: '0 0 30px var(--glow-color-bright)' },
-                        },
-                        'float': {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        'slide-up': {
-                            '0%': { transform: 'translateY(30px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        },
-                        'fade-in': {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        'shimmer': {
-                            '0%': { backgroundPosition: '-200% 0' },
-                            '100%': { backgroundPosition: '200% 0' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Locally built Tailwind CSS bundle (no CDN — see package.json/tailwind.config.js) -->
+    <link rel="stylesheet" href="{% static 'recommender/css/tailwind.css' %}">
+    <!-- Self-hosted Inter font (no Google Fonts CDN) -->
+    <link rel="stylesheet" href="{% static 'recommender/css/fonts.css' %}">
 
     <!-- Prevent FOUC: apply theme before render -->
     <script>
@@ -61,11 +22,6 @@
             }
         })();
     </script>
-
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * { font-family: 'Inter', system-ui, sans-serif; }
@@ -592,6 +548,55 @@
         html:not(.dark) .filter-control {
             background: #ffffff;
         }
+
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* LIVE COMPARE PANEL — BM25 vs TF-IDF                                */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        .compare-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        .compare-col-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-primary);
+        }
+        .compare-col-header.winner {
+            background: linear-gradient(135deg, rgba(45, 212, 191, 0.08), transparent);
+        }
+        .compare-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1.25rem;
+            border-bottom: 1px solid var(--border-primary);
+            transition: background 0.2s ease;
+        }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-row:hover { background: rgba(255, 255, 255, 0.02); }
+        .compare-rank {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: var(--accent-primary-bg);
+            color: var(--accent-primary);
+        }
+        .compare-empty {
+            padding: 2rem 1.25rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body class="bg-mesh antialiased">
@@ -600,6 +605,10 @@
     <!-- NAVIGATION BAR with Theme Toggle                                      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <nav class="relative z-30 flex items-center justify-between max-w-7xl mx-auto px-6 pt-5">
+        <a href="{% url 'recommender:compare' %}" class="text-sm text-themed-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Bandingkan BM25 vs TF-IDF
+        </a>
         <!-- Theme Toggle -->
         <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
             <div class="theme-toggle-knob">
@@ -855,7 +864,9 @@
                     <div class="detail-cell">
                         <p class="detail-label text-[10px] uppercase tracking-wider mb-1">Battery</p>
                         <p class="detail-value text-sm font-semibold {{ product.battery_color }}">
-                            {% if product.battery_health %}<span class="battery-dot"></span>{{ product.battery_health }}%{% else %}N/A{% endif %}
+                            {% if product.battery_health %}<span class="battery-dot"></span>{{ product.battery_health }}%
+                            {% elif product.battery_is_imputed %}<span class="battery-dot"></span>≈{{ product.battery_val|floatformat:0 }}% <span class="text-[9px] font-normal italic text-themed-muted" title="Penjual tidak mencantumkan battery health; nilai ini adalah median dataset, bukan data asli.">(estimasi)</span>
+                            {% else %}N/A{% endif %}
                         </p>
                     </div>
 
@@ -932,7 +943,11 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-themed-muted uppercase tracking-wider text-xs">Battery:</span>
-                            <span class="font-bold text-themed-primary text-right">{% if product.battery_health %}{{ product.battery_health }}%{% else %}N/A{% endif %}</span>
+                            <span class="font-bold text-themed-primary text-right">
+                                {% if product.battery_health %}{{ product.battery_health }}%
+                                {% elif product.battery_is_imputed %}≈{{ product.battery_val|floatformat:0 }}% <span class="text-[10px] font-normal italic">(estimasi)</span>
+                                {% else %}N/A{% endif %}
+                            </span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-themed-muted uppercase tracking-wider text-xs">Wilayah:</span>
@@ -982,6 +997,69 @@
             </p>
         </div>
         {% endif %}
+
+        <!-- ════════════════════════════════════════════════════════════════════ -->
+        <!-- LIVE COMPARE PANEL — BM25 vs TF-IDF, always on, for whatever query -->
+        <!-- was typed. Placed below the main results so the primary BM25      -->
+        <!-- grid stays the focal point. No Precision/Recall here (needs      -->
+        <!-- ground truth a free-typed query doesn't have) — that lives in    -->
+        <!-- eval/results.md, via `python manage.py run_evaluation`.          -->
+        <!-- ════════════════════════════════════════════════════════════════════ -->
+        <div class="mt-12 pt-8 animate-slide-up" style="border-top: 1px solid var(--border-primary);">
+            <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <h2 class="text-lg font-bold text-themed-primary">Perbandingan Live: BM25 vs TF-IDF</h2>
+                <span class="badge-status text-[10px] px-2 py-0.5 rounded-full">untuk query "{{ query }}"</span>
+            </div>
+            <p class="text-xs text-themed-muted mb-4">
+                Kedua metode dijalankan langsung terhadap query & filter yang sama saat ini — bukan skor Precision/Recall (itu butuh ground truth berlabel, tidak tersedia untuk query bebas). Panel ini murni perbandingan ranking visual. Mau bandingkan beberapa query sekaligus? Coba <a href="{% url 'recommender:compare' %}" class="text-accent-primary hover:underline">halaman Bandingkan BM25 vs TF-IDF</a>.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <!-- BM25 column -->
+                <div class="compare-panel overflow-hidden">
+                    <div class="compare-col-header winner">
+                        <div>
+                            <p class="text-sm font-bold text-themed-primary flex items-center gap-1.5">Okapi BM25 <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style="background: var(--accent-secondary-bg); color: var(--accent-secondary);">METODE UTAMA</span></p>
+                            <p class="text-[10px] text-themed-muted mt-0.5">{{ total_results }} hasil · {{ execution_time }}s</p>
+                        </div>
+                    </div>
+                    {% for product, score in results|slice:":10" %}
+                    <div class="compare-row">
+                        <span class="compare-rank">{{ forloop.counter }}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-themed-primary truncate">{{ product.kategori_varian }} · {{ product.penyimpanan }}</p>
+                            <p class="text-[11px] text-themed-muted truncate">{{ product.platform }} · {{ product.harga }}</p>
+                        </div>
+                        <span class="badge-score px-2 py-1 text-[11px] shrink-0">{{ score }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="compare-empty">Tidak ada hasil.</div>
+                    {% endfor %}
+                </div>
+
+                <!-- TF-IDF column -->
+                <div class="compare-panel overflow-hidden">
+                    <div class="compare-col-header">
+                        <div>
+                            <p class="text-sm font-bold text-themed-primary">TF-IDF + Cosine Similarity <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full badge-mono">BASELINE</span></p>
+                            <p class="text-[10px] text-themed-muted mt-0.5">{{ tfidf_total_results }} hasil · {{ tfidf_execution_time }}s</p>
+                        </div>
+                    </div>
+                    {% for product, score in tfidf_results|slice:":10" %}
+                    <div class="compare-row">
+                        <span class="compare-rank">{{ forloop.counter }}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-themed-primary truncate">{{ product.kategori_varian }} · {{ product.penyimpanan }}</p>
+                            <p class="text-[11px] text-themed-muted truncate">{{ product.platform }} · {{ product.harga }}</p>
+                        </div>
+                        <span class="badge-score px-2 py-1 text-[11px] shrink-0">{{ score }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="compare-empty">Tidak ada hasil.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
         {% endif %}
 
         <!-- Initial state (no query yet) -->

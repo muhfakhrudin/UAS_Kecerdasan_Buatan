@@ -16,8 +16,10 @@ Parameters:
 import csv
 import math
 import os
-import re
+import statistics
 from collections import Counter
+
+from .preprocessing import preprocess
 
 
 # ─── BM25 Hyperparameters ───────────────────────────────────────────────────────
@@ -27,20 +29,20 @@ B = 0.75   # Controls document length normalization (0 = no normalization, 1 = f
 
 def _tokenize(text):
     """
-    Tokenize and case-fold a text string.
-    
-    Splits on non-alphanumeric characters and converts to lowercase.
-    This serves as the analyzer for both queries and documents.
-    
+    Run the shared preprocessing pipeline on a text string.
+
+    Delegates to preprocessing.preprocess(): case folding, punctuation
+    removal, tokenizing, stopword removal, stemming. This is the analyzer
+    for both queries and documents, and is shared with the TF-IDF baseline
+    so both methods see identical text handling.
+
     Args:
         text (str): The raw text to tokenize.
-    
+
     Returns:
-        list[str]: A list of lowercase tokens.
+        list[str]: A list of processed tokens.
     """
-    if not text:
-        return []
-    return re.findall(r'[a-z0-9]+', text.lower())
+    return preprocess(text)
 
 
 def _build_search_content(row):
@@ -102,14 +104,30 @@ def load_products():
     project directory) and constructs a list of product dictionaries, each
     enriched with a 'search_content' field for BM25 indexing.
     
+    Missing Battery Health values are imputed with the dataset's median
+    (over the rows that do report a value), per the paper's data-cleaning
+    plan (Bagian III.B). Imputed rows are flagged via battery_is_imputed
+    so the UI can show them as an estimate rather than as seller-reported
+    fact — the median is used for filtering/sorting/ranking, but callers
+    must not present it as verified data.
+
     Returns:
         list[dict]: A list of product dictionaries with the following keys:
+            - doc_id (int): Stable 0-based row index, used as the document
+              identifier by the evaluation harness (eval/) and the TF-IDF
+              baseline (tfidf_engine.py).
             - toko (str): Store name
             - platform (str): Marketplace platform
             - kategori_seri (str): iPhone series category
             - kategori_varian (str): iPhone variant
             - penyimpanan (str): Storage capacity
-            - battery_health (str): Battery health percentage
+            - battery_health (str): Raw battery health string as reported in the
+              CSV; empty string if the seller did not report one (even if
+              battery_val below was imputed).
+            - battery_val (float | None): Reported value, or the dataset median
+              if imputed. None only if the corpus has no reported values at all.
+            - battery_is_imputed (bool): True if battery_val came from median
+              imputation rather than the seller's own listing.
             - battery_color (str): Tailwind CSS color class for battery badge
             - harga (str): Original price string
             - harga_raw (int): Numeric price value
@@ -122,44 +140,61 @@ def load_products():
     from django.conf import settings
     csv_path = os.path.join(settings.BASE_DIR, 'dataset_iphone.csv')
 
-    products = []
     with open(csv_path, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            battery_raw = row.get('Battery Health', '').strip()
+        rows = list(csv.DictReader(f))
+
+    # First pass: compute the corpus median from rows that do report a value.
+    reported_battery_vals = []
+    for row in rows:
+        raw = row.get('Battery Health', '').strip()
+        if raw:
             try:
-                battery_val = float(battery_raw) if battery_raw else None
+                reported_battery_vals.append(float(raw))
             except ValueError:
-                battery_val = None
+                pass
+    battery_median = statistics.median(reported_battery_vals) if reported_battery_vals else None
 
-            # Pre-compute color class for template
-            if battery_val is not None:
-                if battery_val >= 90:
-                    battery_color = 'battery-good'
-                elif battery_val >= 80:
-                    battery_color = 'battery-fair'
-                else:
-                    battery_color = 'battery-low'
+    products = []
+    for doc_id, row in enumerate(rows):
+        battery_raw = row.get('Battery Health', '').strip()
+        try:
+            battery_val_reported = float(battery_raw) if battery_raw else None
+        except ValueError:
+            battery_val_reported = None
+
+        battery_is_imputed = battery_val_reported is None and battery_median is not None
+        battery_val = battery_val_reported if battery_val_reported is not None else battery_median
+
+        # Pre-compute color class for template
+        if battery_val is not None:
+            if battery_val >= 90:
+                battery_color = 'battery-good'
+            elif battery_val >= 80:
+                battery_color = 'battery-fair'
             else:
-                battery_color = 'battery-na'
+                battery_color = 'battery-low'
+        else:
+            battery_color = 'battery-na'
 
-            product = {
-                'toko': row.get('Toko', '').strip(),
-                'platform': row.get('Platform', '').strip(),
-                'kategori_seri': row.get('Kategori Seri', '').strip(),
-                'kategori_varian': row.get('Kategori Varian', '').strip(),
-                'penyimpanan': row.get('penyimpanan', '').strip(),
-                'battery_health': battery_raw,
-                'battery_val': battery_val,
-                'battery_color': battery_color,
-                'harga': row.get('Harga', '').strip(),
-                'harga_raw': _parse_harga_raw(row.get('Harga', '')),
-                'pembayaran': row.get('Pembayaran', '').strip(),
-                'wilayah_toko': row.get('Wilayah Toko', '').strip(),
-                'kategori_iphone': row.get('Kategori iPhone', '').strip(),
-                'search_content': _build_search_content(row),
-            }
-            products.append(product)
+        product = {
+            'doc_id': doc_id,
+            'toko': row.get('Toko', '').strip(),
+            'platform': row.get('Platform', '').strip(),
+            'kategori_seri': row.get('Kategori Seri', '').strip(),
+            'kategori_varian': row.get('Kategori Varian', '').strip(),
+            'penyimpanan': row.get('penyimpanan', '').strip(),
+            'battery_health': battery_raw,
+            'battery_val': battery_val,
+            'battery_is_imputed': battery_is_imputed,
+            'battery_color': battery_color,
+            'harga': row.get('Harga', '').strip(),
+            'harga_raw': _parse_harga_raw(row.get('Harga', '')),
+            'pembayaran': row.get('Pembayaran', '').strip(),
+            'wilayah_toko': row.get('Wilayah Toko', '').strip(),
+            'kategori_iphone': row.get('Kategori iPhone', '').strip(),
+            'search_content': _build_search_content(row),
+        }
+        products.append(product)
 
     return products
 
