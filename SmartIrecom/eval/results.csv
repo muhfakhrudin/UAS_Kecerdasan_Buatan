@@ -1,3 +1,0 @@
-Method,Precision@10,Recall@10,Hit Rate@10,NDCG@10,Avg. Query Time (ms)
-TF-IDF + Cosine Similarity,0.3214,0.4846,0.9286,0.4949,16.623
-Okapi BM25,0.6071,0.7380,1.0000,0.9229,9.981

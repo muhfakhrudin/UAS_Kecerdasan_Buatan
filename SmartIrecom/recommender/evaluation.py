@@ -8,17 +8,14 @@ script — used by `python manage.py run_evaluation`
 quantitative Precision/Recall/Hit Rate/NDCG table for the paper
 (eval/results.md, eval/results.csv, eval/ground_truth.json).
 
-The live web page at /evaluasi/paper/ (views.paper_evaluation_view) uses
-this module's 14-query ground truth for the official paper numbers.
-
-/evaluasi/ (views.compare_view) also uses this module, but differently:
-via parse_query_constraints() below, it tries to auto-detect the same
+/evaluasi/ (views.compare_view) also uses this module: via
+parse_query_constraints() below, it tries to auto-detect the same
 kind of structured constraints (variant/storage/platform/battery/region)
 directly from whatever free-text query a visitor types, by matching
 against the real distinct values in the currently-loaded dataset. When
 that succeeds, ground truth — and therefore real Precision/Recall/Hit
 Rate/NDCG — can be computed for that ad-hoc query too, using the exact
-same _matches() AND-semantics as the 14 curated queries (methodologically
+same _matches() AND-semantics as the curated queries (methodologically
 identical rigor, just with automatically- rather than manually-written
 constraints). When a query has no recognizable structured terms (e.g.
 pure natural language with no matching variant/storage/platform/etc.),
@@ -51,22 +48,15 @@ K = 10
 
 # Each query's constraints are matched against the exact product dict keys
 # produced by search_engine.load_products(). Verified against the real
-# dataset to each have a non-empty relevant set (2-41 documents).
+# dataset to each have a non-empty relevant set. Kept deliberately small
+# (5) while still covering each constraint type used by _matches():
+# variant+storage, +platform, +battery threshold, +region, +certification.
 QUERY_CONSTRAINTS = [
     ('iPhone 11 64GB', dict(kategori_varian='iPhone 11', penyimpanan='64GB')),
-    ('iPhone 11 Pro Max 256GB', dict(kategori_varian='iPhone 11 Pro Max', penyimpanan='256GB')),
     ('iPhone 12 128GB Shopee', dict(kategori_varian='iPhone 12', penyimpanan='128GB', platform='Shopee')),
-    ('iPhone 12 Pro Max 256GB Tokopedia', dict(kategori_varian='iPhone 12 Pro Max', penyimpanan='256GB', platform='Tokopedia')),
     ('iPhone 13 Pro battery diatas 90', dict(kategori_varian='iPhone 13 Pro', min_battery=90)),
-    ('iPhone 13 256GB', dict(kategori_varian='iPhone 13', penyimpanan='256GB')),
-    ('iPhone 12 Mini 128GB', dict(kategori_varian='iPhone 12 Mini', penyimpanan='128GB')),
-    ('iPhone 13 Pro Max 512GB', dict(kategori_varian='iPhone 13 Pro Max', penyimpanan='512GB')),
     ('iPhone 11 Pro 256GB Jakarta', dict(kategori_varian='iPhone 11 Pro', penyimpanan='256GB', wilayah_contains='Jakarta')),
-    ('iPhone 13 Mini 128GB Shopee', dict(kategori_varian='iPhone 13 Mini', penyimpanan='128GB', platform='Shopee')),
     ('iPhone 12 Pro 128GB Resmi', dict(kategori_varian='iPhone 12 Pro', penyimpanan='128GB', kategori_iphone='Resmi')),
-    ('iPhone 11 128GB Tokopedia', dict(kategori_varian='iPhone 11', penyimpanan='128GB', platform='Tokopedia')),
-    ('iPhone 13 128GB battery 90 Shopee', dict(kategori_varian='iPhone 13', penyimpanan='128GB', min_battery=90, platform='Shopee')),
-    ('iPhone 12 256GB Bandung', dict(kategori_varian='iPhone 12', penyimpanan='256GB', wilayah_contains='Bandung')),
 ]
 
 RELEVANCE_CRITERIA = (

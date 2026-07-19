@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bandingkan BM25 vs TF-IDF — iRecom Master</title>
-    <meta name="description" content="Bandingkan langsung ranking Okapi BM25 vs TF-IDF + Cosine Similarity untuk satu query, live, pada dataset iPhone bekas iRecom Master.">
+    <title>Evaluasi Multi-Query — iRecom Master</title>
+    <meta name="description" content="Demo evaluasi multi-query: bandingkan Okapi BM25 vs TF-IDF + Cosine Similarity untuk 5 query sekaligus dan lihat rerata metriknya, live, pada dataset iPhone bekas iRecom Master.">
 
     <!-- Locally built Tailwind CSS bundle (no CDN — see package.json/tailwind.config.js) -->
     <link rel="stylesheet" href="{% static 'recommender/css/tailwind.css' %}">
@@ -40,6 +40,7 @@
             --accent-tertiary: #fbbf24;
             --accent-primary-bg: rgba(99, 102, 241, 0.12);
             --accent-secondary-bg: rgba(45, 212, 191, 0.12);
+            --accent-warn-bg: rgba(251, 191, 36, 0.12);
             --mesh-1: rgba(99, 102, 241, 0.07);
             --mesh-2: rgba(45, 212, 191, 0.05);
             --glow-color-dim: rgba(99, 102, 241, 0.25);
@@ -61,6 +62,7 @@
             --accent-tertiary: #f59e0b;
             --accent-primary-bg: rgba(99, 102, 241, 0.08);
             --accent-secondary-bg: rgba(20, 184, 166, 0.08);
+            --accent-warn-bg: rgba(245, 158, 11, 0.1);
             --mesh-1: rgba(99, 102, 241, 0.06);
             --mesh-2: rgba(20, 184, 166, 0.04);
             --glow-color-dim: rgba(99, 102, 241, 0.15);
@@ -86,10 +88,10 @@
         .search-input:focus { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.45), 0 0 24px var(--glow-color-dim); }
         .btn-glow { background: linear-gradient(135deg, #6366f1, #4f46e5, #4338ca); box-shadow: 0 0 20px rgba(99, 102, 241, 0.35); transition: all 0.3s ease; }
         .btn-glow:hover { box-shadow: 0 0 30px rgba(99, 102, 241, 0.55); transform: translateY(-2px); }
-        .btn-glow:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .query-row { transition: border-color 0.2s ease; }
         .query-row:focus-within { border-color: var(--border-hover) !important; }
+        .query-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem; display: block; }
 
         .eval-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
         .eval-table th, .eval-table td { padding: 0.55rem 0.85rem; text-align: left; border-bottom: 1px solid var(--table-border); }
@@ -101,6 +103,7 @@
         .badge-method { display: inline-flex; align-items: center; font-weight: 600; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; }
         .badge-bm25 { background: var(--accent-secondary-bg); color: var(--accent-secondary); }
         .badge-tfidf { background: var(--accent-primary-bg); color: var(--accent-primary); }
+        .badge-demo { background: var(--accent-warn-bg); color: var(--accent-tertiary); }
         .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.1rem; border-bottom: 1px solid var(--border-primary); }
 
         .theme-toggle {
@@ -120,9 +123,9 @@
 <body class="bg-mesh antialiased">
 
     <nav class="relative z-30 flex items-center justify-between max-w-6xl mx-auto px-6 pt-5">
-        <a href="{% url 'recommender:search' %}" class="text-sm text-themed-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
+        <a href="{% url 'recommender:compare' %}" class="text-sm text-themed-secondary hover:text-accent-primary transition-colors flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Kembali ke Pencarian
+            Kembali ke Bandingkan (1 Query)
         </a>
         <button id="theme-toggle" class="theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
             <div class="theme-toggle-knob">
@@ -133,26 +136,36 @@
     </nav>
 
     <header class="relative max-w-6xl mx-auto px-6 pt-8 pb-6 text-center">
+        <span class="badge-method badge-demo mb-3">Demo Evaluasi Multi-Query</span>
         <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-3">
             <span style="background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                Bandingkan BM25 vs TF-IDF
+                Evaluasi Multi-Query
             </span>
         </h1>
-        <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-3">
-            Masukkan satu query pilihan sendiri — dijalankan live lewat Okapi BM25 (metode utama) dan TF-IDF + Cosine Similarity (baseline) sekaligus, atas dataset asli yang sama.
+        <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-6">
+            Masukkan tepat 5 query pilihan sendiri — semuanya dijalankan live lewat Okapi BM25 dan TF-IDF + Cosine Similarity, lalu rerata Precision/Recall/Hit Rate/NDCG@10-nya ditampilkan. Ini eksperimen bebas milik Anda sendiri, <strong>bukan</strong> angka evaluasi resmi paper (yang dihasilkan terpisah lewat <code>python manage.py run_evaluation</code>).
         </p>
-        <a href="{% url 'recommender:multi_query_evaluation' %}" class="inline-flex items-center gap-1.5 text-xs text-accent-primary hover:underline mb-6">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h3m0 0l-3-3m3 3l-3 3M4 7h9m-9 5h5m-5 5h9"/></svg>
-            Coba Evaluasi Multi-Query (5 query sekaligus) →
-        </a>
 
-        <form method="GET" action="{% url 'recommender:compare' %}" id="compare-form" class="max-w-2xl mx-auto text-left">
-            <div class="flex items-center gap-2">
-                <div class="query-row flex-1 flex items-center search-bar-bg rounded-xl overflow-hidden" style="border: 1px solid var(--border-primary);">
-                    <input type="text" name="query" value="{{ query }}" placeholder="mis. iPhone 12 Pro Max 256GB Tokopedia" class="search-input flex-1 bg-transparent px-4 py-2.5 text-sm focus:outline-none text-themed-primary" autocomplete="off">
+        <form method="GET" action="{% url 'recommender:multi_query_evaluation' %}" class="max-w-2xl mx-auto text-left">
+            <input type="hidden" name="submitted" value="1">
+            <div class="space-y-2 mb-3">
+                {% for field in query_inputs %}
+                <div>
+                    <label class="query-label" for="{{ field.name }}">{{ field.label }}</label>
+                    <div class="query-row flex items-center search-bar-bg rounded-xl overflow-hidden" style="border: 1px solid var(--border-primary);">
+                        <input type="text" id="{{ field.name }}" name="{{ field.name }}" value="{{ field.value }}" placeholder="mis. iPhone 12 Pro Max 256GB Tokopedia" class="search-input flex-1 bg-transparent px-4 py-2.5 text-sm focus:outline-none text-themed-primary" autocomplete="off">
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
+
+            {% if error %}
+            <p class="text-xs text-center mb-3" style="color: #f87171;">⚠ {{ error }}</p>
+            {% endif %}
+
+            <div class="flex justify-center">
                 <button type="submit" class="btn-glow text-white font-semibold px-6 py-2.5 rounded-xl text-sm tracking-wide cursor-pointer">
-                    Bandingkan
+                    Jalankan Evaluasi 5 Query
                 </button>
             </div>
         </form>
@@ -161,10 +174,56 @@
     <main class="max-w-6xl mx-auto px-6 pb-16">
         {% if result %}
         <p class="text-xs text-themed-muted text-center mb-6">
-            {{ total_scanned }} produk dipindai untuk query "{{ result.query }}"
+            {{ result.total_scanned }} produk dipindai · {{ num_queries }} query dibandingkan
+            · {{ result.num_with_ground_truth }} dari {{ num_queries }} punya atribut terstruktur terdeteksi (bisa dihitung metriknya)
         </p>
 
+        {% if result.summary %}
+        <div class="card-glass p-5 mb-10 overflow-x-auto">
+            <h2 class="text-base font-bold text-themed-primary mb-1">Ringkasan Rerata ({{ result.num_with_ground_truth }} dari {{ num_queries }} kueri)</h2>
+            <p class="text-[11px] text-themed-muted mb-4">
+                Hanya query yang atribut terstrukturnya berhasil terdeteksi (varian/storage/platform/battery/wilayah) yang dirata-rata untuk Precision/Recall/Hit Rate/NDCG — query lain dikecualikan, bukan dihitung sebagai 0. Rata-rata waktu eksekusi dihitung dari seluruh {{ num_queries }} query.
+            </p>
+            <table class="eval-table">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th class="num">Precision@10</th>
+                        <th class="num">Recall@10</th>
+                        <th class="num">Hit Rate@10</th>
+                        <th class="num">NDCG@10</th>
+                        <th class="num">Avg. Waktu (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for method, m in result.summary.items %}
+                    <tr>
+                        <td>
+                            {% if method == 'Okapi BM25' %}
+                            <span class="badge-method badge-bm25">{{ method }}</span>
+                            {% else %}
+                            <span class="badge-method badge-tfidf">{{ method }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ m.precision_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.recall_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.hit_rate_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.ndcg_at_k|floatformat:4 }}</td>
+                        <td class="num">{{ m.avg_time_ms|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-xs text-themed-muted text-center mb-10">
+            ⚠ Tidak ada satu pun dari {{ num_queries }} query yang punya atribut terstruktur terdeteksi — tabel rerata tidak dapat ditampilkan (bukan 0, memang tidak terdefinisi tanpa ground truth). Lihat catatan per query di bawah.
+        </p>
+        {% endif %}
+
+        {% for qr in result.query_results %}
         <div class="mb-10">
+            <h2 class="text-base font-bold text-themed-primary mb-3">{{ forloop.counter }}. "{{ qr.query }}"</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <!-- BM25 column -->
                 <div class="card-glass overflow-hidden">
@@ -172,14 +231,14 @@
                         <div>
                             <span class="badge-method badge-bm25">Okapi BM25 (Metode Utama)</span>
                         </div>
-                        <span class="text-[11px] text-themed-muted">{{ result.bm25_results|length }} hasil · {{ result.bm25_time }}s</span>
+                        <span class="text-[11px] text-themed-muted">{{ qr.bm25_results|length }} hasil · {{ qr.bm25_time_ms }}ms</span>
                     </div>
                     <table class="eval-table">
                         <thead>
                             <tr><th style="width:2rem;">#</th><th>Produk</th><th>Platform · Harga</th><th class="num">Skor</th></tr>
                         </thead>
                         <tbody>
-                            {% for product, score in result.bm25_results %}
+                            {% for product, score in qr.bm25_results %}
                             <tr>
                                 <td class="text-themed-muted">{{ forloop.counter }}</td>
                                 <td class="text-themed-primary font-medium">{{ product.kategori_varian }} · {{ product.penyimpanan }}</td>
@@ -199,14 +258,14 @@
                         <div>
                             <span class="badge-method badge-tfidf">TF-IDF + Cosine (Baseline)</span>
                         </div>
-                        <span class="text-[11px] text-themed-muted">{{ result.tfidf_results|length }} hasil · {{ result.tfidf_time }}s</span>
+                        <span class="text-[11px] text-themed-muted">{{ qr.tfidf_results|length }} hasil · {{ qr.tfidf_time_ms }}ms</span>
                     </div>
                     <table class="eval-table">
                         <thead>
                             <tr><th style="width:2rem;">#</th><th>Produk</th><th>Platform · Harga</th><th class="num">Skor</th></tr>
                         </thead>
                         <tbody>
-                            {% for product, score in result.tfidf_results %}
+                            {% for product, score in qr.tfidf_results %}
                             <tr>
                                 <td class="text-themed-muted">{{ forloop.counter }}</td>
                                 <td class="text-themed-primary font-medium">{{ product.kategori_varian }} · {{ product.penyimpanan }}</td>
@@ -221,11 +280,11 @@
                 </div>
             </div>
 
-            {% if result.metrics %}
+            {% if qr.metrics %}
             <div class="card-glass overflow-hidden mt-3">
                 <div class="panel-header">
                     <p class="text-xs text-themed-secondary">
-                        Atribut terdeteksi: <span class="text-themed-primary font-medium">{{ result.metrics.constraints_display }}</span> · {{ result.metrics.num_relevant }} dokumen relevan
+                        Atribut terdeteksi: <span class="text-themed-primary font-medium">{{ qr.metrics.constraints_display }}</span> · {{ qr.metrics.num_relevant }} dokumen relevan
                     </p>
                 </div>
                 <table class="eval-table">
@@ -233,7 +292,7 @@
                         <tr><th>Method</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
                     </thead>
                     <tbody>
-                        {% for method, m in result.metrics.methods.items %}
+                        {% for method, m in qr.metrics.methods.items %}
                         <tr>
                             <td>
                                 {% if method == 'Okapi BM25' %}
@@ -253,17 +312,18 @@
             </div>
             {% else %}
             <p class="text-[11px] text-themed-muted mt-3 px-1">
-                ⚠ Tidak ada atribut terstruktur (varian/storage/platform/battery/wilayah) yang terdeteksi pada query ini — Precision/Recall/Hit Rate/NDCG tidak dapat dihitung (bukan 0, memang tidak terdefinisi tanpa ground truth).
+                ⚠ Tidak ada atribut terstruktur (varian/storage/platform/battery/wilayah) yang terdeteksi pada query ini — Precision/Recall/Hit Rate/NDCG tidak dapat dihitung (bukan 0, memang tidak terdefinisi tanpa ground truth) dan query ini dikecualikan dari rerata di atas.
             </p>
             {% endif %}
         </div>
+        {% endfor %}
 
         {% else %}
         <div class="text-center py-16">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="background: var(--accent-primary-bg); border: 1px solid var(--border-hover);">
                 <svg class="w-8 h-8" style="color: var(--accent-primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             </div>
-            <p class="text-themed-secondary">Masukkan minimal satu query untuk membandingkan hasil ranking.</p>
+            <p class="text-themed-secondary">Masukkan 5 query untuk menjalankan evaluasi multi-query.</p>
         </div>
         {% endif %}
     </main>
@@ -276,8 +336,8 @@
         }
         document.addEventListener('DOMContentLoaded', function() {
             updateThemeIcons();
-            const queryInput = document.querySelector('.search-input');
-            if (queryInput && !queryInput.value) { queryInput.focus(); }
+            const firstInput = document.querySelector('#query1');
+            if (firstInput && !firstInput.value) { firstInput.focus(); }
         });
         document.getElementById('theme-toggle').addEventListener('click', function() {
             const html = document.documentElement;

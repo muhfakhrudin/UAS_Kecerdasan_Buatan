@@ -6,14 +6,14 @@ Smart IRecom adalah aplikasi sistem rekomendasi iPhone bekas yang ditenagai oleh
 
 ## 🚀 Prasyarat Sistem
 Pastikan perangkat Anda sudah terinstal:
-- **Python 3.10 ke atas** (Direkomendasikan Python 3.12)
+- **Python 3.12 ke atas**
 - **Django 6.0** (Akan diinstal via virtual environment)
 
 ---
 
 ## 🛠️ Langkah Instalasi & Persiapan
 
-Aplikasi ini sudah dilengkapi dengan virtual environment (`venv`) bawaan. Ikuti langkah di bawah ini untuk mengaktifkan dan menjalankannya.
+Aplikasi tidak menyertakan virtual environment agar ukuran berkas penyerahan tetap ringkas. Ikuti langkah di bawah ini untuk membuat environment lokal dan menjalankannya.
 
 ### 1. Masuk ke Direktori Project
 Buka terminal (CMD / PowerShell / Bash) lalu arahkan ke folder utama project:
@@ -21,8 +21,14 @@ Buka terminal (CMD / PowerShell / Bash) lalu arahkan ke folder utama project:
 cd "d:\KULYAH\Semester 6\Kecerdasan Buatan\smart_irecom"
 ```
 
-### 2. Aktivasi Virtual Environment (Windows)
-Aktifkan `venv` sesuai shell yang Anda gunakan:
+### 2. Buat dan Aktifkan Virtual Environment (Windows)
+Buat environment sekali saja:
+
+```powershell
+python -m venv venv
+```
+
+Lalu aktifkan `venv` sesuai shell yang Anda gunakan:
 
 - **Menggunakan PowerShell (Direkomendasikan):**
   ```powershell
@@ -48,10 +54,10 @@ Navigasikan terminal Anda ke folder aplikasi Django tempat file `manage.py` bera
 cd SmartIrecom
 ```
 
-### 4. Instalasi Dependensi (Jika Diperlukan)
-Untuk memastikan seluruh package terinstal dengan benar di dalam `venv` Anda, jalankan:
+### 4. Instalasi Dependensi
+Install package yang diperlukan aplikasi:
 ```bash
-pip install django sqlparse asgiref tzdata
+pip install -r requirements.txt
 ```
 
 ---
@@ -62,6 +68,11 @@ pip install django sqlparse asgiref tzdata
 Pastikan konfigurasi aplikasi Django Anda tidak memiliki error:
 ```bash
 python manage.py check
+```
+
+Jika database belum ada atau dijalankan pada komputer baru, buat tabel bawaan Django sekali saja:
+```bash
+python manage.py migrate
 ```
 
 ### 2. Mulai Development Server
