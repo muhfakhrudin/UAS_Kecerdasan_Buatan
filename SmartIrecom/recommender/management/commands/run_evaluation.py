@@ -3,7 +3,7 @@ Django management command: python manage.py run_evaluation
 
 Runs the BM25-vs-TF-IDF evaluation harness (recommender/evaluation.py) —
 the exact same code path the live /evaluasi/ page uses — prints a
-comparison table to the console, and writes the paper deliverables to
+comparison table to the console, and writes the evaluation results to
 eval/ at the project root:
     eval/ground_truth.json  — the 14 test queries + relevant doc IDs + criteria
     eval/results.md         — the required Method/Precision/Recall/Hit Rate/NDCG/Time table

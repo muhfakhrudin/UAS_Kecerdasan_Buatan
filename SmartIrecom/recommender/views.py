@@ -11,7 +11,7 @@ Views for the Smart IRecom recommender application.
 - multi_query_evaluation_view (`/evaluasi/multi-query/`): a user-driven
   demo across exactly 5 manually-typed queries at once, averaging
   Precision/Recall/Hit Rate/NDCG@10 across them. An experiment the visitor
-  runs themselves — distinct from the paper's fixed-query numbers, which
+  runs themselves — distinct from the system's benchmark fixed-query numbers, which
   are produced separately by `python manage.py run_evaluation`
   (recommender/evaluation.py's run_evaluation()) and are not exposed as a
   page in this app.
@@ -304,9 +304,9 @@ def multi_query_evaluation_view(request):
     AND execution time), never padding in a fabricated 0/result for it.
     Among the remaining ranked queries, Precision/Recall/Hit Rate/NDCG@10
     are further averaged only over those with derivable ground truth (same
-    rule as compare_view and the paper's run_evaluation()).
+    rule as compare_view and the system's run_evaluation()).
 
-    This is a visitor-run experiment, not the paper's official numbers —
+    This is a visitor-run experiment, not the system's official benchmark numbers —
     the template labels it explicitly as a demo.
     """
     field_names = [f'query{i}' for i in range(1, MULTI_QUERY_COUNT + 1)]

@@ -5,7 +5,7 @@ TF-IDF + Cosine Similarity baseline (tfidf_engine.py).
 This is a real part of the `recommender` Django app — not a standalone
 script — used by `python manage.py run_evaluation`
 (recommender/management/commands/run_evaluation.py) to produce the
-quantitative Precision/Recall/Hit Rate/NDCG table for the paper
+quantitative Precision/Recall/Hit Rate/NDCG table for the system benchmark
 (eval/results.md, eval/results.csv, eval/ground_truth.json).
 
 /evaluasi/ (views.compare_view) also uses this module: via

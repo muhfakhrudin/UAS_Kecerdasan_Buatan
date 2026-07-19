@@ -130,7 +130,7 @@
             Bandingkan BM25 vs TF-IDF
         </h1>
         <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-3">
-            Masukkan satu query pilihan sendiri — dijalankan live lewat Okapi BM25 (metode utama) dan TF-IDF + Cosine Similarity (baseline) sekaligus, atas dataset asli yang sama.
+            Masukkan satu query pilihan sendiri — dijalankan secara langsung (live) lewat Okapi BM25 (metode utama) dan TF-IDF + Cosine Similarity (metode pembanding) sekaligus, atas dataset asli yang sama.
         </p>
         <a href="{% url 'recommender:multi_query_evaluation' %}" class="inline-flex items-center gap-1.5 text-xs text-accent-primary hover:underline mb-6">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h3m0 0l-3-3m3 3l-3 3M4 7h9m-9 5h5m-5 5h9"/></svg>
@@ -198,7 +198,7 @@
                 <div class="card-glass overflow-hidden">
                     <div class="panel-header">
                         <div>
-                            <span class="badge-method badge-tfidf">TF-IDF + Cosine (Baseline)</span>
+                            <span class="badge-method badge-tfidf">TF-IDF + Cosine (Metode Pembanding)</span>
                         </div>
                         <span class="text-[11px] text-themed-muted">{{ result.tfidf_results|length }} hasil · {{ result.tfidf_time }}s</span>
                     </div>
@@ -231,7 +231,7 @@
                 </div>
                 <table class="eval-table">
                     <thead>
-                        <tr><th>Method</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
+                        <tr><th>Metode</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
                     </thead>
                     <tbody>
                         {% for method, m in result.metrics.methods.items %}

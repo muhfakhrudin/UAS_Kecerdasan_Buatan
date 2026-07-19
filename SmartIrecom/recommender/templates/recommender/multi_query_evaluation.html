@@ -134,7 +134,7 @@
             Evaluasi Multi-Query
         </h1>
         <p class="text-sm md:text-base text-themed-secondary max-w-2xl mx-auto mb-6">
-            Masukkan tepat 5 query pilihan sendiri — semuanya dijalankan live lewat Okapi BM25 dan TF-IDF + Cosine Similarity, lalu rerata Precision/Recall/Hit Rate/NDCG@10-nya ditampilkan. Ini eksperimen bebas milik Anda sendiri, <strong>bukan</strong> angka evaluasi resmi paper (yang dihasilkan terpisah lewat <code>python manage.py run_evaluation</code>).
+            Masukkan tepat 5 query pilihan sendiri — semuanya dijalankan secara langsung (live) lewat Okapi BM25 dan TF-IDF + Cosine Similarity, lalu rerata Precision/Recall/Hit Rate/NDCG@10-nya ditampilkan untuk membandingkan performa kedua metode secara langsung.
         </p>
 
         <form method="GET" action="{% url 'recommender:multi_query_evaluation' %}" class="max-w-2xl mx-auto text-left">
@@ -178,7 +178,7 @@
             <table class="eval-table">
                 <thead>
                     <tr>
-                        <th>Method</th>
+                        <th>Metode</th>
                         <th class="num">Precision@10</th>
                         <th class="num">Recall@10</th>
                         <th class="num">Hit Rate@10</th>
@@ -255,7 +255,7 @@
                 <div class="card-glass overflow-hidden">
                     <div class="panel-header">
                         <div>
-                            <span class="badge-method badge-tfidf">TF-IDF + Cosine (Baseline)</span>
+                            <span class="badge-method badge-tfidf">TF-IDF + Cosine (Metode Pembanding)</span>
                         </div>
                         <span class="text-[11px] text-themed-muted">{{ qr.tfidf_results|length }} hasil · {{ qr.tfidf_time_ms }}ms</span>
                     </div>
@@ -288,7 +288,7 @@
                 </div>
                 <table class="eval-table">
                     <thead>
-                        <tr><th>Method</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
+                        <tr><th>Metode</th><th class="num">Precision@10</th><th class="num">Recall@10</th><th class="num">Hit Rate@10</th><th class="num">NDCG@10</th></tr>
                     </thead>
                     <tbody>
                         {% for method, m in qr.metrics.methods.items %}

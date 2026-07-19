@@ -105,8 +105,8 @@ def load_products():
     enriched with a 'search_content' field for BM25 indexing.
     
     Missing Battery Health values are imputed with the dataset's median
-    (over the rows that do report a value), per the paper's data-cleaning
-    plan (Bagian III.B). Imputed rows are flagged via battery_is_imputed
+    (over the rows that do report a value), per the system's data-cleaning
+    specifications. Imputed rows are flagged via battery_is_imputed
     so the UI can show them as an estimate rather than as seller-reported
     fact — the median is used for filtering/sorting/ranking, but callers
     must not present it as verified data.
